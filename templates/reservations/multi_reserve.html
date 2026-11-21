@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Réserver plusieurs jours — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+        <a href="{% url 'menus:week_menu' %}" class="link-more mb-2">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>Retour au menu
+        </a>
+
+        <div class="eyebrow">Commande groupée</div>
+        <h1 class="display-md mb-1">Réserver plusieurs jours en une opération</h1>
+        <p class="small muted mb-4">
+            Cochez les jours souhaités et choisissez votre plat principal pour chacun. Le débit aura lieu la veille à la clôture (ou sera couvert par votre forfait « Année soldée »).
+        </p>
+
+        {% if not open_days %}
+            <div class="surface empty-state">
+                <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                <strong>Aucun jour ouvert disponible</strong>
+                <p class="small mb-3">Tous les prochains services ouverts ont déjà fait l'objet d'une réservation.</p>
+                <a href="{% url 'reservations:list' %}" class="btn btn-soft">Voir mes réservations</a>
+            </div>
+        {% else %}
+            <form method="post">
+                {% csrf_token %}
+                {% for day in open_days %}
+                    <section class="surface p-3 mb-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <label class="vsc-check-pill flex-grow-1" for="svc-{{ day.service.pk }}">
+                                <input type="checkbox" name="service_ids" value="{{ day.service.pk }}" id="svc-{{ day.service.pk }}">
+                                <span class="vsc-check-box" aria-hidden="true"></span>
+                                <span class="fw-bold text-capitalize">{{ day.service.date|date:"l j F Y" }}</span>
+                            </label>
+                            <span class="chip chip-primary price">{{ day.service.meal_price|fcfa }}</span>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label" for="entree-{{ day.service.pk }}">Entrée</label>
+                                <select name="entree_{{ day.service.pk }}" id="entree-{{ day.service.pk }}" class="form-select">
+                                    <option value="">Sans entrée</option>
+                                    {% for opt in day.entrees %}
+                                        <option value="{{ opt.pk }}" {% if opt.remaining == 0 %}disabled{% endif %}>
+                                            {{ opt.dish.name }} ({{ opt.remaining }} rest.)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label" for="plat-{{ day.service.pk }}">Plat principal <span class="text-danger">*</span></label>
+                                <select name="plat_{{ day.service.pk }}" id="plat-{{ day.service.pk }}" class="form-select">
+                                    {% for opt in day.plats %}
+                                        <option value="{{ opt.pk }}" {% if opt.remaining == 0 %}disabled{% endif %}>
+                                            {{ opt.dish.name }} ({{ opt.remaining }} rest.)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label" for="dessert-{{ day.service.pk }}">Dessert</label>
+                                <select name="dessert_{{ day.service.pk }}" id="dessert-{{ day.service.pk }}" class="form-select">
+                                    <option value="">Sans dessert</option>
+                                    {% for opt in day.desserts %}
+                                        <option value="{{ opt.pk }}" {% if opt.remaining == 0 %}disabled{% endif %}>
+                                            {{ opt.dish.name }} ({{ opt.remaining }} rest.)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+                {% endfor %}
+
+                <label class="vsc-check-pill mb-3" for="id_multi_allergy">
+                    <input type="checkbox" name="allergy_acknowledged" id="id_multi_allergy">
+                    <span class="vsc-check-box" aria-hidden="true"></span>
+                    <span class="small fw-medium">
+                        J'ai vérifié les allergènes des plats sélectionnés et je confirme ma commande groupée.
+                    </span>
+                </label>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-calendar2-check" aria-hidden="true"></i>Confirmer la réservation multi-jours
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

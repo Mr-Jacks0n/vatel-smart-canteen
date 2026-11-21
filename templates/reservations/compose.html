@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+{% load static canteen_tags %}
+
+{% block title %}Composer mon plateau — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<!-- Bannière culinaire -->
+<section class="vs-breadcumb" aria-label="Bannière composition du plateau">
+    <div class="vs-breadcumb-sub">
+        {% if active_pass %}
+            Forfait « Année soldée » · Clôture la veille à 18h00
+        {% else %}
+            Repas complet : {{ service.meal_price|fcfa }} · Clôture la veille à 18h00
+        {% endif %}
+    </div>
+    <h1 class="vs-breadcumb-title text-capitalize">
+        Le déjeuner de {{ service.date|date:"l j F" }}
+    </h1>
+    <div class="vs-breadcumb-pill">
+        <a href="{% url 'menus:week_menu' %}?date={{ service.date|date:'Y-m-d' }}">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>Menu de la semaine
+        </a>
+        <span class="sep">-</span>
+        <span class="current">{% if existing_res %}Modifier mon plateau{% else %}Composer mon plateau{% endif %}</span>
+    </div>
+</section>
+
+<!-- Trois étapes : 1. Entrée -> 2. Plat principal -> 3. Dessert -->
+<nav class="steps-bar" aria-label="Étapes de composition">
+    <a href="#step-entree" class="step-pill is-active">
+        <span class="step-num">1</span>
+        <span>1. Entrée</span>
+    </a>
+    <a href="#step-plat" class="step-pill">
+        <span class="step-num">2</span>
+        <span>2. Plat principal</span>
+    </a>
+    <a href="#step-dessert" class="step-pill">
+        <span class="step-num">3</span>
+        <span>3. Dessert</span>
+    </a>
+</nav>
+
+<form method="post" id="compose-form">
+    {% csrf_token %}
+    {% if existing_res %}
+        <input type="hidden" name="modify_id" value="{{ existing_res.pk }}">
+    {% endif %}
+
+    {% if allergen_conflicts %}
+        <!-- Alerte allergène avec confirmation explicite obligatoire -->
+        <section class="surface overflow-hidden mb-4 border-danger vsc-border-2" role="alert" aria-labelledby="allergen-alert-title">
+            <div class="p-3 bg-danger text-white d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-octagon-fill fs-4" aria-hidden="true"></i>
+                <h2 class="h6 fw-bold mb-0 text-white" id="allergen-alert-title">
+                    Alerte allergène sur votre plateau
+                </h2>
+            </div>
+            <div class="p-3 p-md-4 bg-white">
+                <p class="mb-3 fw-semibold">
+                    Votre sélection contient <strong>{{ allergen_conflicts|join:", " }}</strong>, déclaré(s) dans votre profil alimentaire.
+                </p>
+                <label class="vsc-check-pill family-allergy mb-3" for="id_allergy_ack">
+                    <input type="checkbox" name="allergy_acknowledged" id="id_allergy_ack" required>
+                    <span class="vsc-check-box" aria-hidden="true"></span>
+                    <span class="fw-semibold">J'ai pris connaissance de cette alerte</span>
+                </label>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="#step-entree" class="btn btn-brand">
+                        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>Choisir un autre plat
+                    </a>
+                    <button type="submit" class="btn btn-soft">
+                        Confirmer quand même
+                    </button>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Colonne gauche : sélection des plats -->
+        <div class="col-12 col-lg-8">
+            <!-- 1. ENTRÉE -->
+            <section class="surface p-3 p-md-4 mb-3" aria-labelledby="step-entree">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="display-md mb-0" id="step-entree">1. Entrée</h2>
+                    <span class="badge-soft">Inclus</span>
+                </div>
+                <div class="d-grid gap-2">
+                    {% for opt in entrees %}
+                        <label
+                            class="choice-card"
+                            for="entree-{{ opt.pk }}"
+                            data-dish-slot="entree"
+                            data-dish-name="{{ opt.dish.name }}"
+                        >
+                            <input type="radio" name="entree_id" id="entree-{{ opt.pk }}" value="{{ opt.pk }}" {% if opt.remaining == 0 %}disabled{% endif %}>
+                            {% if opt.dish.image %}
+                                <img class="choice-thumb" src="{% static 'img/dishes/' %}{{ opt.dish.image }}" alt="{{ opt.dish.name }}">
+                            {% endif %}
+                            <span class="flex-grow-1 min-w-0">
+                                <span class="d-flex justify-content-between align-items-start gap-2">
+                                    <strong class="vs-product-title mb-0 vsc-title-sm">{{ opt.dish.name }}</strong>
+                                    {% if opt.remaining == 0 %}
+                                        <span class="chip chip-danger">Complet</span>
+                                    {% elif opt.remaining < 10 %}
+                                        <span class="chip chip-warn-amber">Bientôt complet · {{ opt.remaining }} rest.</span>
+                                    {% else %}
+                                        <span class="chip">{{ opt.remaining }} portions restantes</span>
+                                    {% endif %}
+                                </span>
+                                <span class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                                    {% for a in opt.dish.allergens.all %}
+                                        <span class="chip chip-allergen">
+                                            <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>{{ a.name }}
+                                        </span>
+                                    {% endfor %}
+                                    {% for r in opt.dish.compatible_regimes.all %}
+                                        <span class="chip chip-regime">
+                                            <i class="bi bi-info-circle" aria-hidden="true"></i>{{ r.name }}
+                                        </span>
+                                    {% endfor %}
+                                </span>
+                            </span>
+                            <span class="btn-round-plus" aria-hidden="true"><i class="bi bi-plus-lg"></i></span>
+                        </label>
+                    {% endfor %}
+
+                    <!-- Carte « Sans entrée » au même format avec mention « Le prix du repas complet reste identique » -->
+                    <label
+                        class="choice-card is-skip"
+                        for="entree-none"
+                        data-dish-slot="entree"
+                        data-dish-name="Sans entrée"
+                    >
+                        <input type="radio" name="entree_id" id="entree-none" value="" checked>
+                        <span class="list-icon" aria-hidden="true"><i class="bi bi-slash-circle"></i></span>
+                        <span class="flex-grow-1 min-w-0">
+                            <strong class="d-block">Sans entrée</strong>
+                            <span class="small muted">Le prix du repas complet reste identique.</span>
+                        </span>
+                        <span class="btn-round-plus" aria-hidden="true"><i class="bi bi-check2"></i></span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- 2. PLAT PRINCIPAL -->
+            <section class="surface p-3 p-md-4 mb-3" aria-labelledby="step-plat">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="display-md mb-0" id="step-plat">2. Plat principal <span class="text-danger">*</span></h2>
+                    <span class="badge-soft">Obligatoire</span>
+                </div>
+                <div class="d-grid gap-2">
+                    {% for opt in plats %}
+                        <label
+                            class="choice-card"
+                            for="plat-{{ opt.pk }}"
+                            data-dish-slot="plat"
+                            data-dish-name="{{ opt.dish.name }}"
+                        >
+                            <input type="radio" name="plat_id" id="plat-{{ opt.pk }}" value="{{ opt.pk }}" required {% if forloop.first and opt.remaining > 0 %}checked{% endif %} {% if opt.remaining == 0 %}disabled{% endif %}>
+                            {% if opt.dish.image %}
+                                <img class="choice-thumb" src="{% static 'img/dishes/' %}{{ opt.dish.image }}" alt="{{ opt.dish.name }}">
+                            {% endif %}
+                            <span class="flex-grow-1 min-w-0">
+                                <span class="d-flex justify-content-between align-items-start gap-2">
+                                    <strong class="vs-product-title mb-0 vsc-title-sm">{{ opt.dish.name }}</strong>
+                                    {% if opt.remaining == 0 %}
+                                        <span class="chip chip-danger">Complet</span>
+                                    {% elif opt.remaining < 10 %}
+                                        <span class="chip chip-warn-amber">Bientôt complet · {{ opt.remaining }} rest.</span>
+                                    {% else %}
+                                        <span class="chip">{{ opt.remaining }} portions restantes</span>
+                                    {% endif %}
+                                </span>
+                                <span class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                                    {% for a in opt.dish.allergens.all %}
+                                        <span class="chip chip-allergen">
+                                            <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>{{ a.name }}
+                                        </span>
+                                    {% endfor %}
+                                    {% for r in opt.dish.compatible_regimes.all %}
+                                        <span class="chip chip-regime">
+                                            <i class="bi bi-info-circle" aria-hidden="true"></i>{{ r.name }}
+                                        </span>
+                                    {% endfor %}
+                                </span>
+                            </span>
+                            <span class="btn-round-plus" aria-hidden="true"><i class="bi bi-plus-lg"></i></span>
+                        </label>
+                    {% empty %}
+                        <div class="surface-flat p-3 small muted">Aucun plat principal disponible.</div>
+                    {% endfor %}
+                </div>
+
+                {% if service.extra_portion_price %}
+                    <!-- Option « + 1 portion » en interrupteur -->
+                    <div class="surface-flat p-3 mt-3">
+                        <div class="form-check form-switch d-flex justify-content-between align-items-center ps-0 mb-0">
+                            <label class="form-check-label fw-semibold" for="id_extra_portions">
+                                + 1 portion · <strong class="tabular">+{{ service.extra_portion_price|fcfa }}</strong>
+                                <span class="d-block small muted fw-normal">Sur le plat principal (non couverte par le forfait annuel)</span>
+                            </label>
+                            <input
+                                class="form-check-input ms-2"
+                                type="checkbox"
+                                role="switch"
+                                name="extra_portions"
+                                id="id_extra_portions"
+                                value="1"
+                                style="width: 2.6rem; height: 1.35rem;"
+                                hx-get="{% url 'reservations:price_preview' service.pk %}"
+                                hx-include="#compose-form"
+                                hx-target="#price-summary-box"
+                            >
+                        </div>
+                    </div>
+                {% endif %}
+            </section>
+
+            <!-- 3. DESSERT -->
+            <section class="surface p-3 p-md-4 mb-3" aria-labelledby="step-dessert">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="display-md mb-0" id="step-dessert">3. Dessert</h2>
+                    <span class="badge-soft">Inclus</span>
+                </div>
+                <div class="d-grid gap-2">
+                    {% for opt in desserts %}
+                        <label
+                            class="choice-card"
+                            for="dessert-{{ opt.pk }}"
+                            data-dish-slot="dessert"
+                            data-dish-name="{{ opt.dish.name }}"
+                        >
+                            <input type="radio" name="dessert_id" id="dessert-{{ opt.pk }}" value="{{ opt.pk }}" {% if opt.remaining == 0 %}disabled{% endif %}>
+                            {% if opt.dish.image %}
+                                <img class="choice-thumb" src="{% static 'img/dishes/' %}{{ opt.dish.image }}" alt="{{ opt.dish.name }}">
+                            {% endif %}
+                            <span class="flex-grow-1 min-w-0">
+                                <span class="d-flex justify-content-between align-items-start gap-2">
+                                    <strong class="vs-product-title mb-0 vsc-title-sm">{{ opt.dish.name }}</strong>
+                                    {% if opt.remaining == 0 %}
+                                        <span class="chip chip-danger">Complet</span>
+                                    {% elif opt.remaining < 10 %}
+                                        <span class="chip chip-warn-amber">Bientôt complet · {{ opt.remaining }} rest.</span>
+                                    {% else %}
+                                        <span class="chip">{{ opt.remaining }} portions restantes</span>
+                                    {% endif %}
+                                </span>
+                                <span class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                                    {% for a in opt.dish.allergens.all %}
+                                        <span class="chip chip-allergen">
+                                            <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>{{ a.name }}
+                                        </span>
+                                    {% endfor %}
+                                    {% for r in opt.dish.compatible_regimes.all %}
+                                        <span class="chip chip-regime">
+                                            <i class="bi bi-info-circle" aria-hidden="true"></i>{{ r.name }}
+                                        </span>
+                                    {% endfor %}
+                                </span>
+                            </span>
+                            <span class="btn-round-plus" aria-hidden="true"><i class="bi bi-plus-lg"></i></span>
+                        </label>
+                    {% endfor %}
+
+                    <!-- Carte « Sans dessert » au même format avec mention « Le prix du repas complet reste identique » -->
+                    <label
+                        class="choice-card is-skip"
+                        for="dessert-none"
+                        data-dish-slot="dessert"
+                        data-dish-name="Sans dessert"
+                    >
+                        <input type="radio" name="dessert_id" id="dessert-none" value="" checked>
+                        <span class="list-icon" aria-hidden="true"><i class="bi bi-slash-circle"></i></span>
+                        <span class="flex-grow-1 min-w-0">
+                            <strong class="d-block">Sans dessert</strong>
+                            <span class="small muted">Le prix du repas complet reste identique.</span>
+                        </span>
+                        <span class="btn-round-plus" aria-hidden="true"><i class="bi bi-check2"></i></span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Mode de remise (Retrait au comptoir ou Livraison · [lieu]) -->
+            <section class="surface p-3 p-md-4 mb-3" id="fulfillment-section" aria-labelledby="step-fulfillment">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <h2 class="h5 fw-bold mb-0" id="step-fulfillment">Mode de remise</h2>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label class="pay-option h-100" for="fulfill-site">
+                            <input
+                                type="radio"
+                                name="fulfillment"
+                                id="fulfill-site"
+                                value="ON_SITE"
+                                checked
+                                hx-get="{% url 'reservations:price_preview' service.pk %}"
+                                hx-include="#compose-form"
+                                hx-target="#price-summary-box"
+                            >
+                            <span class="list-icon" aria-hidden="true"><i class="bi bi-shop"></i></span>
+                            <span class="flex-grow-1 min-w-0">
+                                <strong class="d-block">Retrait au comptoir</strong>
+                                <span class="small muted">Sur place à la cantine</span>
+                            </span>
+                        </label>
+                    </div>
+                    {% if delivery_enabled %}
+                        <div class="col-12 col-sm-6">
+                            <label class="pay-option h-100" for="fulfill-delivery">
+                                <input
+                                    type="radio"
+                                    name="fulfillment"
+                                    id="fulfill-delivery"
+                                    value="DELIVERY"
+                                    hx-get="{% url 'reservations:price_preview' service.pk %}"
+                                    hx-include="#compose-form"
+                                    hx-target="#price-summary-box"
+                                >
+                                <span class="list-icon op-topup-icon" aria-hidden="true"><i class="bi bi-truck"></i></span>
+                                <span class="flex-grow-1 min-w-0">
+                                    <strong class="d-block">Livraison</strong>
+                                    <span class="small muted">Dans votre bâtiment, salle ou bureau</span>
+                                </span>
+                            </label>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if delivery_enabled %}
+                    <div id="delivery-location-box" class="surface-flat p-3 mt-2" hidden>
+                        <label class="form-label" for="id_delivery_location">
+                            Lieu de livraison (bâtiment, salle ou bureau) <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="delivery_location"
+                            id="id_delivery_location"
+                            class="form-control"
+                            placeholder="Ex. Bâtiment B · Salle 204"
+                        >
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+
+        <!-- Colonne droite : Mon plateau -->
+        <div class="col-12 col-lg-4">
+            <aside class="fd-right-panel" id="mon-plateau-panel" aria-labelledby="mon-plateau-title">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="display-md mb-0" id="mon-plateau-title">Mon plateau</h2>
+                    <span class="badge-soft text-capitalize">{{ service.date|date:"D j M" }}</span>
+                </div>
+
+                <!-- Miniatures carrées des choix -->
+                <div class="mb-3">
+                    <div class="fd-order-item">
+                        <img class="fd-order-thumb" src="{% static 'img/dishes/salade.jpg' %}" alt="Entrée">
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="eyebrow">1. Entrée</div>
+                            <div class="fw-semibold text-truncate" id="tray-slot-entree">Sans entrée</div>
+                        </div>
+                    </div>
+                    <div class="fd-order-item">
+                        <img class="fd-order-thumb" src="{% static 'img/dishes/attieke.jpg' %}" alt="Plat principal">
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="eyebrow">2. Plat principal</div>
+                            <div class="fw-semibold text-truncate" id="tray-slot-plat">
+                                {% if plats %}{{ plats.0.dish.name }}{% else %}À choisir{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fd-order-item">
+                        <img class="fd-order-thumb" src="{% static 'img/dishes/dessert.jpg' %}" alt="Dessert">
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="eyebrow">3. Dessert</div>
+                            <div class="fw-semibold text-truncate" id="tray-slot-dessert">Sans dessert</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode de remise : « Retrait au comptoir » ou « Livraison · [lieu] », frais non mentionnés, lien « Changer » -->
+                <div class="fd-address-box">
+                    <div class="eyebrow mb-1">Mode de remise</div>
+                    <div class="fd-address-head">
+                        <span class="fd-address-title">
+                            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                            <span id="tray-fulfillment-label">Retrait au comptoir</span>
+                        </span>
+                        <a href="#fulfillment-section" class="fd-btn-change">Changer</a>
+                    </div>
+                </div>
+
+                <!-- Total en grand + mention « Débité sur votre solde Vatel Cantine la veille à 18h00 » -->
+                <div id="price-summary-box" class="mb-3">
+                    {% include "reservations/partials/price_summary.html" with extra_portions=0 extra_cost=0 delivery_cost=0 total=service.meal_price due_pass=0 %}
+                </div>
+
+                {% if active_pass %}
+                    <div class="surface-flat p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="badge-annual-pass">
+                                <i class="bi bi-award-fill" aria-hidden="true"></i>Année soldée
+                            </span>
+                            <span class="badge-status status-ok">Repas couvert</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="surface-flat p-3 mb-3">
+                        <div class="d-flex flex-wrap justify-content-between gap-2 small">
+                            <span>Solde actuel : <strong class="tabular">{{ wallet.balance|fcfa }}</strong></span>
+                            <span>
+                                Solde prévisionnel :
+                                <strong class="tabular {% if projected_balance < service.meal_price %}text-warning{% else %}text-success{% endif %}">
+                                    {{ projected_balance|fcfa }}
+                                </strong>
+                            </span>
+                        </div>
+                        {% if projected_balance < service.meal_price %}
+                            <div class="alert-soft alert-warning mt-2 mb-0" role="status">
+                                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                <div class="small">
+                                    Pensez à recharger avant demain 18h00.
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <label class="pay-option" for="pm-wallet">
+                            <input type="radio" name="payment_mode" id="pm-wallet" value="WALLET" checked>
+                            <span class="list-icon op-topup-icon" aria-hidden="true"><i class="bi bi-clock-history"></i></span>
+                            <span class="flex-grow-1 min-w-0">
+                                <strong class="d-block">Débiter mon solde Vatel Cantine la veille</strong>
+                                <span class="small muted">La veille à 18h00</span>
+                            </span>
+                        </label>
+                        {% if pickup_enabled %}
+                            <label class="pay-option" for="pm-pickup">
+                                <input type="radio" name="payment_mode" id="pm-pickup" value="PICKUP">
+                                <span class="list-icon op-pickup-icon" aria-hidden="true"><i class="bi bi-phone-vibrate"></i></span>
+                                <span class="flex-grow-1 min-w-0">
+                                    <strong class="d-block">Régler au retrait dans l'application</strong>
+                                    <span class="small muted">Mobile Money ou carte bancaire</span>
+                                </span>
+                            </label>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <!-- Unique action principale de l'écran : « Réserver mon plateau » (jamais « Payer ») -->
+                <button
+                    type="submit"
+                    class="btn btn-piment btn-lg w-100"
+                    data-loading-text="Réservation de votre plateau en cours…"
+                >
+                    <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                    {% if existing_res %}Enregistrer mon plateau{% else %}Réserver mon plateau{% endif %}
+                </button>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Barre fixe en bas sur téléphone (< 992 px) : « Mon plateau · Total · Réserver » -->
+    <div class="mobile-tray-bar d-lg-none">
+        <div>
+            <div class="small fw-semibold">Mon plateau</div>
+            <div class="fw-bold tabular">
+                {% if active_pass %}Année soldée{% else %}{{ service.meal_price|fcfa }}{% endif %}
+            </div>
+        </div>
+        <a href="#mon-plateau-panel" class="btn btn-piment btn-sm">
+            Réserver mon plateau
+        </a>
+    </div>
+</form>
+
+<div class="alert-soft alert-info mt-4" role="note">
+    <i class="bi bi-shield-exclamation" aria-hidden="true"></i>
+    <div class="small">
+        Allergènes déclarés par la cantine. L'application ne garantit pas l'absence de contamination croisée. En cas d'allergie sévère, signalez-le au personnel.
+    </div>
+</div>
+{% endblock %}

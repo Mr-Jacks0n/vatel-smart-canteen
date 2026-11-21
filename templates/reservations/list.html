@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Mes réservations — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+    <div class="min-w-0">
+        <div class="eyebrow">Suivi des repas</div>
+        <h1 class="display-md mb-0">Mes réservations</h1>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'reservations:multi_reserve' %}" class="btn btn-soft btn-sm">
+            <i class="bi bi-calendar2-week" aria-hidden="true"></i>Réserver plusieurs jours
+        </a>
+        <a href="{% url 'menus:week_menu' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>Réserver un repas
+        </a>
+    </div>
+</div>
+
+<h2 class="eyebrow mb-2">À venir</h2>
+{% for res in upcoming %}
+    <article class="surface p-3 mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div class="min-w-0 flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <h3 class="h5 mb-0 text-capitalize">{{ res.service.date|date:"l j F Y" }}</h3>
+                    {% if res.short_code %}
+                        <span class="chip chip-primary tabular">{{ res.short_code }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2 my-2">
+                    <span class="badge-status {% if res.status == 'CONFIRMED' or res.status == 'SERVED' %}status-ok{% elif res.status == 'DECLINED' %}status-off{% else %}status-danger{% endif %}">
+                        {{ res.status_display_label }}
+                    </span>
+
+                    {% if res.status != "DECLINED" %}
+                        {% if res.payment_status == "SCHEDULED" %}
+                            <span class="badge-scheduled">
+                                <i class="bi bi-clock-history" aria-hidden="true"></i>{{ res.get_payment_status_display }}
+                            </span>
+                        {% elif res.payment_status == "SETTLED" %}
+                            <span class="badge-status status-ok">{{ res.get_payment_status_display }}</span>
+                        {% elif res.payment_status == "TO_PAY_AT_PICKUP" %}
+                            <span class="badge-status status-warn">{{ res.get_payment_status_display }}</span>
+                        {% else %}
+                            <span class="badge-status status-off">{{ res.get_payment_status_display }}</span>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if res.fulfillment == "DELIVERY" %}
+                        <span class="badge-delivery">
+                            <i class="bi bi-truck" aria-hidden="true"></i>Livraison : {{ res.delivery_location }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if res.status != "DECLINED" %}
+                    <p class="small muted mb-0">
+                        {% if res.skip_starter %}
+                            Sans entrée
+                        {% else %}
+                            {% for item in res.items.all %}{% if item.category == "ENTREE" %}{{ item.option.dish.name }}{% endif %}{% endfor %}
+                        {% endif %}
+                        ·
+                        {% for item in res.items.all %}{% if item.category == "PLAT" %}{{ item.option.dish.name }}{% if item.portions > 1 %} (+1 portion){% endif %}{% endif %}{% endfor %}
+                        ·
+                        {% if res.skip_dessert %}
+                            Sans dessert
+                        {% else %}
+                            {% for item in res.items.all %}{% if item.category == "DESSERT" %}{{ item.option.dish.name }}{% endif %}{% endfor %}
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                {% if res.amount_due_at_pickup > 0 %}
+                    <div class="alert-soft alert-warning mt-2 py-2 px-3 d-flex flex-wrap justify-content-between align-items-center gap-2" role="status">
+                        <div class="d-flex align-items-center gap-2 small fw-semibold">
+                            <i class="bi bi-phone-vibrate" aria-hidden="true"></i>
+                            <span>Reste à régler via l'appli avant remise : <span class="tabular">{{ res.amount_due_at_pickup|fcfa }}</span></span>
+                        </div>
+                        {% if res.ticket_token %}
+                            <a href="{% url 'reservations:ticket' res.ticket_token %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-phone-vibrate" aria-hidden="true"></i>Payer dans l'appli
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                {% if res.ticket_token and res.status != "CANCELLED" %}
+                    <a href="{% url 'reservations:ticket' res.ticket_token %}" class="btn btn-brand btn-sm">
+                        <i class="bi bi-qr-code" aria-hidden="true"></i>Ticket QR
+                    </a>
+                {% endif %}
+                {% if res.status == "CONFIRMED" and now < res.service.reservation_deadline %}
+                    <a href="{% url 'reservations:compose' res.service.pk %}?modifier={{ res.pk }}" class="btn btn-soft btn-sm">
+                        <i class="bi bi-pencil" aria-hidden="true"></i>Modifier
+                    </a>
+                {% endif %}
+                {% if res.status != "CANCELLED" and res.status != "SERVED" and now < res.service.reservation_deadline %}
+                    <form method="post" action="{% url 'reservations:cancel' res.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-soft btn-sm text-danger" data-confirm="Confirmer l'annulation de cette réservation ?">
+                            Annuler
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+{% empty %}
+    <div class="surface empty-state mb-4">
+        <i class="bi bi-calendar2-x" aria-hidden="true"></i>
+        <strong>Aucune réservation à venir</strong>
+        <p class="small mb-3">Composez votre prochain repas depuis le menu de la semaine.</p>
+        <a href="{% url 'menus:week_menu' %}" class="btn btn-primary">Consulter le menu</a>
+    </div>
+{% endfor %}
+
+{% if past %}
+    <h2 class="eyebrow mt-4 mb-2">Passées</h2>
+    {% for res in past %}
+        <article class="surface p-3 mb-2">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="min-w-0">
+                    <div class="fw-semibold text-capitalize">{{ res.service.date|date:"l j F Y" }}</div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                        <span class="badge-status {% if res.status == 'SERVED' %}status-ok{% elif res.status == 'DECLINED' %}status-off{% else %}status-danger{% endif %}">
+                            {{ res.status_display_label }}
+                        </span>
+                        <span class="small muted">{{ res.get_payment_status_display }}</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    {% if res.status == "SERVED" %}
+                        {% if res.rating %}
+                            <span class="chip chip-gold">
+                                <i class="bi bi-star-fill" aria-hidden="true"></i>{{ res.rating.score }}/5
+                            </span>
+                        {% else %}
+                            <form method="post" action="{% url 'reservations:rate' res.pk %}" class="d-flex gap-2 align-items-center">
+                                {% csrf_token %}
+                                <select name="score" class="form-select vsc-score-select" aria-label="Note">
+                                    <option value="5">5 ★</option>
+                                    <option value="4">4 ★</option>
+                                    <option value="3">3 ★</option>
+                                    <option value="2">2 ★</option>
+                                    <option value="1">1 ★</option>
+                                </select>
+                                <button type="submit" class="btn btn-soft btn-sm">Noter</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+    {% endfor %}
+{% endif %}
+{% endblock %}

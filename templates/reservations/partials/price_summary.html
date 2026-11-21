@@ -1,0 +1,48 @@
+{% load canteen_tags %}
+<div class="vsc-skeleton-box">
+    <!-- Squelette de chargement affiché pendant le recalcul HTMX -->
+    <div class="vsc-htmx-skeleton mb-2" aria-hidden="true">
+        <div class="vsc-skel-line w-65"></div>
+        <div class="vsc-skel-line w-40"></div>
+        <div class="vsc-skel-line w-85 h-lg"></div>
+    </div>
+
+    <div class="surface-flat p-3 small vsc-htmx-content">
+        {% if active_pass %}
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                <span>Repas complet</span>
+                <span class="badge-annual-pass">
+                    <i class="bi bi-award-fill" aria-hidden="true"></i>Année soldée
+                </span>
+            </div>
+            {% if extra_cost %}
+                <div class="d-flex justify-content-between gap-2 mb-1">
+                    <span>+ 1 portion · Plat principal</span>
+                    <strong class="tabular">+{{ extra_cost|fcfa }}</strong>
+                </div>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center gap-2 border-top pt-2 mt-2 fw-bold">
+                <span>Suppléments avant remise</span>
+                <span class="tabular">{% if due_pass %}{{ due_pass|fcfa }}{% else %}Aucun supplément{% endif %}</span>
+            </div>
+        {% else %}
+            <div class="d-flex justify-content-between gap-2 mb-1">
+                <span>Repas complet (identique même sans entrée ni dessert)</span>
+                <strong class="tabular">{{ service.meal_price|fcfa }}</strong>
+            </div>
+            {% if extra_cost %}
+                <div class="d-flex justify-content-between gap-2 mb-1">
+                    <span>+ 1 portion · +{{ service.extra_portion_price|fcfa }}</span>
+                    <strong class="tabular">+{{ extra_cost|fcfa }}</strong>
+                </div>
+            {% endif %}
+            <div class="d-flex justify-content-between align-items-center gap-2 border-top pt-2 mt-2 fw-bold">
+                <span>Total de mon plateau</span>
+                <span class="price fs-4">{{ total|fcfa }}</span>
+            </div>
+            <div class="small muted mt-1">
+                Débité sur votre solde Vatel Cantine la veille à 18h00.
+            </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Ticket QR {{ reservation.short_code }} — Vatel Smart Canteen{% endblock %}
+
+{% block main_class %}no-nav{% endblock %}
+
+{% block bottom_nav %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+        <!-- Bandeau de confirmation de réservation -->
+        <div class="alert-soft alert-success mb-3 align-items-center" role="status">
+            <i class="bi bi-check-circle-fill fs-4" aria-hidden="true"></i>
+            <div>
+                <strong>C'est réservé !</strong> Bon appétit pour {{ reservation.service.date|date:"l" }}, {{ reservation.beneficiary.first_name }}.
+            </div>
+        </div>
+
+        <!-- Ticket façon billet : QR centré sur fond blanc, code court très grand, composition, remise, statut, luminosité conseillée -->
+        <article class="ticket {% if reservation.status == 'SERVED' %}is-served{% endif %} mb-3" aria-label="Ticket QR {{ reservation.short_code }}">
+            <div class="ticket-top">
+                <div class="eyebrow">Vatel Smart Canteen · {{ reservation.service.get_service_type_display }}</div>
+                <h1 class="text-capitalize">Le déjeuner de {{ reservation.service.date|date:"l j F" }}</h1>
+                <p>{{ reservation.beneficiary.full_name }}</p>
+            </div>
+
+            <div class="ticket-perforation" aria-hidden="true"><span></span></div>
+
+            <div class="ticket-body">
+                {% if reservation.status == "SERVED" %}
+                    <div class="mb-2">
+                        <span class="stamp">
+                            {% if reservation.fulfillment == "DELIVERY" %}Livré ✓{% else %}Servi ✓{% endif %}{% if reservation.served_at %} à {{ reservation.served_at|date:"H:i" }}{% endif %}
+                        </span>
+                    </div>
+                {% endif %}
+
+                <div class="qr-frame">
+                    {{ qr_svg|safe }}
+                </div>
+
+                <div class="eyebrow">Code court de retrait</div>
+                <div class="short-code" aria-label="Code de retrait {{ reservation.short_code }}">
+                    {{ reservation.short_code }}
+                </div>
+                <p class="small muted mb-2">
+                    <i class="bi bi-brightness-high-fill text-primary me-1" aria-hidden="true"></i>
+                    Luminosité maximale conseillée au comptoir.
+                </p>
+
+                <div class="surface-flat p-3 text-start small my-3">
+                    <div class="eyebrow mb-2">Composition de votre plateau</div>
+                    <ul class="list-unstyled mb-0 d-grid gap-1">
+                        <li>
+                            <strong>Entrée :</strong>
+                            {% if reservation.skip_starter %}
+                                <span class="muted">Sans entrée</span>
+                            {% else %}
+                                {% for item in reservation.items.all %}{% if item.category == "ENTREE" %}{{ item.option.dish.name }}{% endif %}{% endfor %}
+                            {% endif %}
+                        </li>
+                        <li>
+                            <strong>Plat principal :</strong>
+                            {% for item in reservation.items.all %}{% if item.category == "PLAT" %}{{ item.option.dish.name }}{% if item.portions > 1 %} (×{{ item.portions }}){% endif %}{% endif %}{% endfor %}
+                        </li>
+                        <li>
+                            <strong>Dessert :</strong>
+                            {% if reservation.skip_dessert %}
+                                <span class="muted">Sans dessert</span>
+                            {% else %}
+                                {% for item in reservation.items.all %}{% if item.category == "DESSERT" %}{{ item.option.dish.name }}{% endif %}{% endfor %}
+                            {% endif %}
+                        </li>
+                    </ul>
+
+                    {% if reservation.fulfillment == "DELIVERY" %}
+                        <div class="mt-2 pt-2 border-top">
+                            <span class="badge-delivery">
+                                <i class="bi bi-truck" aria-hidden="true"></i>Livraison · {{ reservation.delivery_location }}
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="ticket-meta">
+                    <div>
+                        <div class="eyebrow">Bénéficiaire</div>
+                        <strong>{{ reservation.beneficiary.full_name }}</strong>
+                    </div>
+                    <div>
+                        <div class="eyebrow">Mode de remise</div>
+                        <strong>{% if reservation.fulfillment == "DELIVERY" %}Livraison{% else %}Retrait au comptoir{% endif %}</strong>
+                    </div>
+                    <div>
+                        <div class="eyebrow">Statut</div>
+                        {% if reservation.payment_mode == "PASS" and reservation.amount_due_at_pickup == 0 %}
+                            <span class="badge-annual-pass">Année soldée</span>
+                        {% elif reservation.payment_mode == "PASS" %}
+                            <strong class="status-warn">Année soldée + suppl.</strong>
+                        {% else %}
+                            <strong class="{% if reservation.payment_status == 'SETTLED' %}status-ok{% elif reservation.payment_status == 'TO_PAY_AT_PICKUP' %}status-warn{% endif %}">
+                                {{ reservation.get_payment_status_display }}
+                            </strong>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if reservation.amount_due_at_pickup > 0 %}
+                    <div class="sim-gateway text-start mt-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                            <span class="op-badge op-pickup">
+                                <i class="bi bi-phone-vibrate" aria-hidden="true"></i>Paiement au retrait
+                            </span>
+                            <strong class="price text-danger">{{ reservation.amount_due_at_pickup|fcfa }}</strong>
+                        </div>
+                        <p class="small muted mb-3">
+                            Réglez ce montant dans l'application (Mobile Money ou carte bancaire) avant la remise de votre plateau.
+                        </p>
+                        <form method="post" action="{% url 'reservations:init_pickup_payment' reservation.pk %}">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <label class="form-label" for="id_pickup_method">Moyen de paiement</label>
+                                <select name="method" id="id_pickup_method" class="form-select">
+                                    {% for code, label in pickup_methods %}
+                                        <option value="{{ code }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="id_pickup_phone">Numéro Mobile Money</label>
+                                <input type="text" name="phone_number" id="id_pickup_phone" class="form-control" placeholder="Téléphone Mobile Money">
+                            </div>
+                            <button type="submit" class="btn btn-piment w-100">
+                                <i class="bi bi-phone-vibrate" aria-hidden="true"></i>Valider dans l'application ({{ reservation.amount_due_at_pickup|fcfa }})
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </article>
+
+        <!-- Raccourci pour enchaîner la semaine -->
+        <div class="d-grid gap-2">
+            {% if reservation.amount_due_at_pickup == 0 %}
+                <a href="{% url 'menus:week_menu' %}" class="btn btn-piment w-100">
+                    <i class="bi bi-calendar-plus" aria-hidden="true"></i>Ajouter le jour suivant
+                </a>
+            {% else %}
+                <a href="{% url 'menus:week_menu' %}" class="btn btn-brand w-100">
+                    <i class="bi bi-calendar-plus" aria-hidden="true"></i>Ajouter le jour suivant
+                </a>
+            {% endif %}
+            <a href="{% url 'reservations:list' %}" class="btn btn-soft w-100">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>Mes réservations
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
