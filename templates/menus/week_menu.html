@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load static canteen_tags %}
+
+{% block title %}Menu de la semaine — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<!-- Bannière Culinaire -->
+<section class="vs-breadcumb" aria-label="Bannière Menu de la semaine">
+    <div class="vs-breadcumb-sub">
+        {% if selected_service %}
+            Repas complet : {{ selected_service.meal_price|fcfa }} · Clôture la veille à 18h00
+        {% else %}
+            Vatel Smart Canteen · L'art de recevoir
+        {% endif %}
+    </div>
+    <h1 class="vs-breadcumb-title text-capitalize">
+        {% if selected_service %}
+            Le déjeuner de {{ selected_service.date|date:"l j F" }}
+        {% else %}
+            Menu de la semaine
+        {% endif %}
+    </h1>
+    <div class="vs-breadcumb-pill">
+        <a href="{% url 'core:home' %}">
+            <i class="bi bi-house-door-fill" aria-hidden="true"></i>Accueil
+        </a>
+        <span class="sep">-</span>
+        <span class="current">Menu de la semaine</span>
+    </div>
+</section>
+
+{% if not services %}
+    <div class="surface empty-state">
+        <i class="bi bi-calendar2-heart" aria-hidden="true"></i>
+        <strong>Le menu de la semaine arrive bientôt.</strong>
+        <p class="small mb-0">Les entrées, plats principaux et desserts apparaîtront ici dès leur publication.</p>
+    </div>
+{% else %}
+    <!-- Défilement horizontal des jours en pastilles -->
+    <nav class="day-tabs mb-3" aria-label="Jours publiés">
+        {% for svc in services %}
+            <a
+                class="day-tab {% if selected_service and svc.pk == selected_service.pk %}is-active{% endif %}"
+                href="?date={{ svc.date|date:'Y-m-d' }}"
+                {% if selected_service and svc.pk == selected_service.pk %}aria-current="page"{% endif %}
+            >
+                <span class="text-capitalize">{{ svc.date|date:"D" }}</span>
+                <strong>{{ svc.date|date:"j" }}</strong>
+                <span class="text-lowercase">{{ svc.date|date:"M" }}</span>
+            </a>
+        {% endfor %}
+    </nav>
+
+    {% if selected_service %}
+        <!-- Trois étapes du plateau : 1. Entrée -> 2. Plat principal -> 3. Dessert -->
+        <nav class="steps-bar" aria-label="Les 3 étapes du plateau">
+            <a href="#cat-ENTREE" class="step-pill is-active">
+                <span class="step-num">1</span>
+                <span>1. Entrée</span>
+            </a>
+            <a href="#cat-PLAT" class="step-pill">
+                <span class="step-num">2</span>
+                <span>2. Plat principal</span>
+            </a>
+            <a href="#cat-DESSERT" class="step-pill">
+                <span class="step-num">3</span>
+                <span>3. Dessert</span>
+            </a>
+        </nav>
+
+        <!-- Barre de synthèse du jour + Unique action principale « Composer mon plateau » & bouton secondaire « Je ne mange pas ce jour » -->
+        <section class="vs-sort-bar" aria-label="Actions du déjeuner">
+            <div>
+                <div class="eyebrow">
+                    {{ selected_service.get_service_type_display }} · Clôture la veille à 18h00
+                </div>
+                <h2 class="vs-sort-title text-capitalize">
+                    Repas complet : <span class="text-primary fw-bold tabular">{{ selected_service.meal_price|fcfa }}</span>
+                    {% if selected_service.extra_portion_price %}
+                        <span class="small muted fw-normal">· Option + 1 portion : +{{ selected_service.extra_portion_price|fcfa }}</span>
+                    {% endif %}
+                </h2>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                {% if not selected_service.is_open_for_reservation %}
+                    <span class="badge-status status-off">Clôturé</span>
+                {% elif user_reservation %}
+                    {% if user_reservation.status == "DECLINED" %}
+                        <span class="badge-status status-off">Je ne mange pas ce jour</span>
+                    {% else %}
+                        <span class="badge-status status-ok">Réservé ✓ ({{ user_reservation.short_code }})</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge-status status-ok">À choisir</span>
+                {% endif %}
+
+                {% if user.is_authenticated and user.is_diner %}
+                    <a href="{% url 'reservations:multi_reserve' %}" class="btn btn-soft btn-sm">
+                        <i class="bi bi-calendar2-week" aria-hidden="true"></i>Plusieurs jours
+                    </a>
+                {% endif %}
+                {% if user.is_authenticated and user.role == "ADMIN" %}
+                    <a href="{% url 'menus:admin_service_list' %}" class="btn btn-soft btn-sm">
+                        <i class="bi bi-pencil-square" aria-hidden="true"></i>Gérer les menus
+                    </a>
+                {% endif %}
+            </div>
+
+            {% if selected_service.is_open_for_reservation and user.is_authenticated and user.is_diner %}
+                <div class="w-100 pt-2 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    {% if user_reservation %}
+                        {% if user_reservation.status == "DECLINED" %}
+                            <form method="post" action="{% url 'reservations:cancel' user_reservation.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-soft btn-sm">
+                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>Revenir sur mon choix
+                                </button>
+                            </form>
+                        {% else %}
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{% url 'reservations:ticket' user_reservation.ticket_token %}" class="btn btn-piment">
+                                    <i class="bi bi-qr-code" aria-hidden="true"></i>Mon ticket ({{ user_reservation.short_code }})
+                                </a>
+                                <a href="{% url 'reservations:compose' selected_service.pk %}?modifier={{ user_reservation.pk }}" class="btn btn-soft">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i>Modifier mon plateau
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="d-flex flex-wrap gap-2 w-100 justify-content-between align-items-center">
+                            <a href="{% url 'reservations:compose' selected_service.pk %}" class="btn btn-piment">
+                                <i class="bi bi-ui-checks" aria-hidden="true"></i>Composer mon plateau
+                            </a>
+                            <form method="post" action="{% url 'reservations:decline_day' selected_service.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-ghost btn-sm muted">
+                                    <i class="bi bi-calendar-x" aria-hidden="true"></i>Je ne mange pas ce jour
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Filtres allergènes -->
+        <section class="mb-4" aria-label="Filtrer par allergène">
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                <span class="eyebrow">Masquer un allergène</span>
+                <span class="small muted"><span id="filter-count">0</span> allergène(s) masqué(s)</span>
+            </div>
+            <div class="filter-row">
+                <button class="filter-chip" type="button" data-allergen-filter="arachides" aria-pressed="false">
+                    <i class="bi bi-slash-circle" aria-hidden="true"></i>Arachides
+                </button>
+                <button class="filter-chip" type="button" data-allergen-filter="lait" aria-pressed="false">
+                    <i class="bi bi-slash-circle" aria-hidden="true"></i>Lait
+                </button>
+                <button class="filter-chip" type="button" data-allergen-filter="poisson" aria-pressed="false">
+                    <i class="bi bi-slash-circle" aria-hidden="true"></i>Poisson
+                </button>
+                <button class="filter-chip" type="button" data-allergen-filter="blé et gluten" aria-pressed="false">
+                    <i class="bi bi-slash-circle" aria-hidden="true"></i>Blé &amp; gluten
+                </button>
+                <button class="filter-chip" type="button" data-allergen-filter="œufs" aria-pressed="false">
+                    <i class="bi bi-slash-circle" aria-hidden="true"></i>Œufs
+                </button>
+                <button class="filter-chip" type="button" data-allergen-filter="crustacés" aria-pressed="false">
+                    <i class="bi bi-slash-circle" aria-hidden="true"></i>Crustacés
+                </button>
+            </div>
+        </section>
+
+        <!-- Cartes de plats par catégorie -->
+        {% for cat_code, cat_label, options in categories %}
+            <section class="mb-4" aria-labelledby="cat-{{ cat_code }}">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <h3 class="display-md mb-0" id="cat-{{ cat_code }}">
+                        {{ forloop.counter }}. {{ cat_label }}
+                    </h3>
+                    <span class="badge-soft">{% if cat_code == "PLAT" %}Obligatoire{% else %}Au choix ou « Sans {{ cat_label|lower|slice:":-1" }} »{% endif %}</span>
+                </div>
+
+                <div class="row g-4">
+                    {% for opt in options %}
+                        <div class="col-12 col-md-6 col-lg-4" data-dish-col>
+                            <article
+                                class="vs-product"
+                                data-allergen-ids="{% for a in opt.dish.allergens.all %}{{ a.name|lower }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                            >
+                                <div class="product-header">
+                                    <div class="product-img">
+                                        {% if opt.dish.image %}
+                                            <img
+                                                src="{% static 'img/dishes/' %}{{ opt.dish.image }}"
+                                                alt="{{ opt.dish.name }}"
+                                            >
+                                        {% endif %}
+                                    </div>
+                                    <span class="vs-cat-tag">{{ opt.dish.get_category_display }}</span>
+                                    {% if opt.remaining == 0 %}
+                                        <span class="vs-discount is-full">Complet</span>
+                                    {% elif opt.remaining < 10 %}
+                                        <span class="vs-discount is-low">Bientôt complet · {{ opt.remaining }} rest.</span>
+                                    {% else %}
+                                        <span class="vs-discount">{{ opt.remaining }} portions restantes</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="product-body">
+                                    <h4 class="vs-product-title">
+                                        {% if selected_service.is_open_for_reservation and user.is_authenticated and user.is_diner %}
+                                            <a href="{% url 'reservations:compose' selected_service.pk %}">{{ opt.dish.name }}</a>
+                                        {% else %}
+                                            {{ opt.dish.name }}
+                                        {% endif %}
+                                    </h4>
+
+                                    {% if opt.dish.description %}
+                                        <p class="small muted mb-2">{{ opt.dish.description }}</p>
+                                    {% elif opt.dish.ingredients %}
+                                        <p class="small muted mb-2">{{ opt.dish.ingredients }}</p>
+                                    {% endif %}
+
+                                    <div class="d-flex flex-wrap gap-1 mb-3">
+                                        {% for allergen in opt.dish.allergens.all %}
+                                            {% if allergen.id in user_allergy_ids or allergen.id in user_intolerance_ids %}
+                                                <span class="chip chip-allergen">
+                                                    <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>
+                                                    <strong>{{ allergen.name }} (profil)</strong>
+                                                </span>
+                                            {% else %}
+                                                <span class="chip chip-allergen">
+                                                    <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>{{ allergen.name }}
+                                                </span>
+                                            {% endif %}
+                                        {% empty %}
+                                            <span class="chip chip-ok">
+                                                <i class="bi bi-check2" aria-hidden="true"></i>Sans allergène majeur
+                                            </span>
+                                        {% endfor %}
+
+                                        {% for regime in opt.dish.compatible_regimes.all %}
+                                            <span class="chip chip-regime">
+                                                <i class="bi bi-info-circle" aria-hidden="true"></i>{{ regime.name }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
+                                        <span class="small muted">
+                                            {% if opt.remaining == 0 %}Indisponible{% else %}Sélectionner sur mon plateau{% endif %}
+                                        </span>
+                                        {% if selected_service.is_open_for_reservation and user.is_authenticated and user.is_diner and opt.remaining > 0 %}
+                                            <a href="{% url 'reservations:compose' selected_service.pk %}" class="btn-round-plus" aria-label="Ajouter {{ opt.dish.name }} à mon plateau">
+                                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                            </a>
+                                        {% elif not user.is_authenticated %}
+                                            <a href="{% url 'accounts:login' %}" class="btn-round-plus" aria-label="Se connecter pour choisir {{ opt.dish.name }}">
+                                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    {% endfor %}
+
+                    {% if cat_code == "ENTREE" or cat_code == "DESSERT" %}
+                        <!-- Carte « Sans entrée » / « Sans dessert » -->
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <article class="vs-product d-flex flex-column justify-content-between">
+                                <div class="p-3 surface-flat rounded-4 d-flex flex-column align-items-center justify-content-center text-center vsc-ratio-4x3">
+                                    <i class="bi bi-slash-circle fs-1 text-primary mb-2" aria-hidden="true"></i>
+                                    <span class="badge-soft">{% if cat_code == "ENTREE" %}Sans entrée{% else %}Sans dessert{% endif %}</span>
+                                </div>
+                                <div class="product-body">
+                                    <h4 class="vs-product-title">
+                                        {% if cat_code == "ENTREE" %}Sans entrée{% else %}Sans dessert{% endif %}
+                                    </h4>
+                                    <p class="small muted mb-3">
+                                        Choix anti-gaspillage enregistré pour la cuisine. <strong>Le prix du repas complet reste identique.</strong>
+                                    </p>
+                                    <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
+                                        <span class="small muted">Choisir cette option</span>
+                                        {% if selected_service.is_open_for_reservation and user.is_authenticated and user.is_diner %}
+                                            <a href="{% url 'reservations:compose' selected_service.pk %}" class="btn-round-plus" aria-label="{% if cat_code == 'ENTREE' %}Sans entrée{% else %}Sans dessert{% endif %}">
+                                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        {% endfor %}
+    {% endif %}
+{% endif %}
+
+<div class="alert-soft alert-info mt-4" role="note">
+    <i class="bi bi-shield-exclamation" aria-hidden="true"></i>
+    <div class="small">
+        Allergènes déclarés par la cantine. L'application ne garantit pas l'absence de contamination croisée. En cas d'allergie sévère, signalez-le au personnel.
+    </div>
+</div>
+{% endblock %}

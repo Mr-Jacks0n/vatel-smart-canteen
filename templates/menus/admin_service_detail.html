@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Service du {{ service.date|date:"d/m/Y" }} — Administration · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div>
+        <a href="{% url 'menus:admin_service_list' %}" class="link-more mb-1">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>Tous les services
+        </a>
+        <h1 class="display-lg text-capitalize mb-0">{{ service.date|date:"l j F Y" }}</h1>
+        <div class="small muted mt-1">
+            Repas complet : <strong>{{ service.meal_price|fcfa }}</strong>
+            {% if service.extra_portion_price %} · Portion supp. : <strong>{{ service.extra_portion_price|fcfa }}</strong>{% endif %}
+            · Heure limite : <strong>{{ service.reservation_deadline|date:"d/m/Y H:i" }}</strong>
+        </div>
+    </div>
+    <form method="post" action="{% url 'menus:admin_service_toggle_publish' service.pk %}">
+        {% csrf_token %}
+        {% if service.is_published %}
+            <button type="submit" class="btn btn-soft">
+                <i class="bi bi-eye-slash" aria-hidden="true"></i>Dépublier
+            </button>
+        {% else %}
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>Publier le service
+            </button>
+        {% endif %}
+    </form>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-4">
+        <section class="chart-card" aria-labelledby="add-option-title">
+            <div class="eyebrow">Composition du menu</div>
+            <h2 class="h6 mb-3" id="add-option-title">Ajouter un plat au service</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" for="{{ option_form.dish.id_for_label }}">Plat (Entrée, Plat ou Dessert)</label>
+                    {{ option_form.dish }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="{{ option_form.capacity.id_for_label }}">Capacité (en portions)</label>
+                    {{ option_form.capacity }}
+                </div>
+                <button type="submit" class="btn btn-brand w-100">
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>Ajouter au menu
+                </button>
+            </form>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-8">
+        {% for cat_code, cat_label, options in categories %}
+            <section class="chart-card mb-3" aria-label="Catégorie {{ cat_label }}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge-soft">{{ cat_label }}</span>
+                    <span class="small muted">{{ options|length }} option(s)</span>
+                </div>
+                <div class="surface-flat px-3 py-1">
+                    {% for opt in options %}
+                        <div class="list-row flex-wrap">
+                            <div class="list-main">
+                                <p class="list-title">{{ opt.dish.name }}</p>
+                                <p class="list-sub tabular">
+                                    Portions réservées : <strong>{{ opt.reserved_count }} / {{ opt.capacity }}</strong>
+                                </p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <form method="post" action="{% url 'menus:admin_option_update_capacity' opt.pk %}" class="d-flex gap-1 align-items-center">
+                                    {% csrf_token %}
+                                    <label class="visually-hidden" for="id_cap_{{ opt.pk }}">Capacité</label>
+                                    <input type="number" id="id_cap_{{ opt.pk }}" name="capacity" value="{{ opt.capacity }}" min="{{ opt.reserved_count|default:1 }}" class="form-control vsc-cap-input tabular">
+                                    <button type="submit" class="btn btn-soft btn-sm">MAJ</button>
+                                </form>
+                                <form method="post" action="{% url 'menus:admin_option_delete' opt.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-soft btn-sm text-danger" {% if opt.reserved_count > 0 %}disabled{% endif %}>
+                                        Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="py-3 small muted text-center">Aucun plat configuré dans cette catégorie.</div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
