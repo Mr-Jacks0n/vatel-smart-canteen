@@ -231,11 +231,14 @@ def admin_closure_view(request):
                 f"Annulations: {last_summary['cancelled_count']}"
             ),
         )
+        deb_s = "s" if last_summary["debited_count"] > 1 else ""
+        rep_s = "s" if last_summary["fallback_pickup_count"] > 1 else ""
+        ann_s = "s" if last_summary["cancelled_count"] > 1 else ""
         messages.success(
             request,
-            f"Clôture exécutée : {last_summary['debited_count']} débit(s), "
-            f"{last_summary['fallback_pickup_count']} repli(s) au retrait, "
-            f"{last_summary['cancelled_count']} annulation(s).",
+            f"Clôture exécutée : {last_summary['debited_count']} débit{deb_s}, "
+            f"{last_summary['fallback_pickup_count']} passage{rep_s} en règlement au retrait, "
+            f"{last_summary['cancelled_count']} annulation{ann_s}.",
         )
 
     services = MealService.objects.filter(is_published=True).order_by("-date")[:15]

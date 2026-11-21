@@ -57,10 +57,10 @@
                             <td>
                                 {% if res.amount_due_at_pickup > 0 %}
                                     <span class="badge-status status-warn">
-                                        Dû dans l'appli : {{ res.amount_due_at_pickup|fcfa }}
+                                        À régler dans l'appli : {{ res.amount_due_at_pickup|fcfa }}
                                     </span>
                                 {% else %}
-                                    <span class="badge-status status-ok">Réglé (SETTLED)</span>
+                                    <span class="badge-status status-ok">Réglé</span>
                                 {% endif %}
                             </td>
                             <td class="text-end">
