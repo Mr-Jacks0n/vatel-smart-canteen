@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Livraisons du jour — Équipe cantine · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Espace Équipe · Remise hors comptoir</div>
+        <h1 class="display-lg mb-0">Livraisons du jour regroupées par lieu</h1>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <span class="badge-delivery">
+            <i class="bi bi-truck" aria-hidden="true"></i>Validation sur le téléphone de l'agent
+        </span>
+        <a href="{% url 'canteen:kitchen' %}" class="btn btn-soft btn-sm">
+            <i class="bi bi-fire" aria-hidden="true"></i>Cuisine
+        </a>
+        <a href="{% url 'canteen:counter' %}" class="btn btn-soft btn-sm">
+            <i class="bi bi-qr-code-scan" aria-hidden="true"></i>Comptoir QR
+        </a>
+    </div>
+</div>
+
+{% for location, items in grouped_deliveries %}
+    <section class="chart-card mb-3" aria-label="Lieu de livraison {{ location }}">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge-delivery">
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>{{ location }}
+                </span>
+                <span class="small muted">{{ items|length }} repas à remettre</span>
+            </div>
+            <span class="chip">Frais livraison sur ligne distincte</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-clean align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Bénéficiaire &amp; Composition</th>
+                        <th>Paiement via l'appli</th>
+                        <th class="text-end">Remise</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in items %}
+                        <tr>
+                            <td><strong class="font-monospace tabular">{{ res.short_code }}</strong></td>
+                            <td>
+                                <div class="fw-semibold">{{ res.beneficiary.full_name }}</div>
+                                <div class="small muted">
+                                    {% for item in res.items.all %}{{ item.option.dish.name }}{% if item.portions > 1 %} (×{{ item.portions }}){% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if res.amount_due_at_pickup > 0 %}
+                                    <span class="badge-status status-warn">
+                                        Dû dans l'appli : {{ res.amount_due_at_pickup|fcfa }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge-status status-ok">Réglé (SETTLED)</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if res.status == "SERVED" %}
+                                    <span class="badge-delivery">
+                                        <i class="bi bi-check2-all" aria-hidden="true"></i>{{ res.status_display_label }}{% if res.served_at %} · {{ res.served_at|date:"H:i" }}{% endif %}
+                                    </span>
+                                {% elif res.status == "CONFIRMED" and res.amount_due_at_pickup == 0 %}
+                                    <form method="post" action="{% url 'canteen:serve_ticket' res.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="deliveries">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-check2-circle" aria-hidden="true"></i>Valider « Livré »
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="small muted">En attente paiement appli</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% empty %}
+    <div class="surface empty-state">
+        <i class="bi bi-truck" aria-hidden="true"></i>
+        <strong>Aucune livraison prévue aujourd'hui</strong>
+        <p class="small mb-0">Les réservations avec l'option « Me faire livrer » apparaîtront ici regroupées par bâtiment, salle ou bureau.</p>
+    </div>
+{% endfor %}
+{% endblock %}

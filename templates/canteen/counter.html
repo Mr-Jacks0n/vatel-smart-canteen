@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Comptoir — Validation des tickets · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<!-- Comptoir : validation rapide par code court ou scan QR -->
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Espace Équipe · Validation rapide au guichet</div>
+        <h1 class="display-lg mb-0">Comptoir — Validation des tickets</h1>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'canteen:kitchen' %}" class="btn btn-soft btn-sm">
+            <i class="bi bi-fire" aria-hidden="true"></i>Cuisine
+        </a>
+        <a href="{% url 'canteen:deliveries' %}" class="btn btn-soft btn-sm">
+            <i class="bi bi-truck" aria-hidden="true"></i>Livraisons
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-7">
+        <!-- Un seul champ géant pour le code -->
+        <section class="chart-card mb-3" aria-labelledby="counter-lookup-title">
+            <h2 class="h6 mb-2" id="counter-lookup-title">Saisir ou scanner le code court du ticket</h2>
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-12 col-sm">
+                    <label class="visually-hidden" for="id_counter_code">Code court du ticket</label>
+                    <input
+                        type="text"
+                        name="code"
+                        id="id_counter_code"
+                        value="{{ short_code }}"
+                        class="form-control input-code"
+                        placeholder="8F3K2M"
+                        maxlength="6"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        spellcheck="false"
+                        autofocus
+                    >
+                </div>
+                <div class="col-12 col-sm-auto">
+                    <button type="submit" class="btn btn-piment btn-lg w-100">
+                        <i class="bi bi-qr-code-scan" aria-hidden="true"></i>Vérifier
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        {% if lookup_error %}
+            <!-- Résultat plein écran rouge avec le motif -->
+            <div class="counter-fullscreen-ko mb-3" role="alert">
+                <i class="bi bi-x-circle-fill display-4 d-block mb-2" aria-hidden="true"></i>
+                <h2 class="display-md text-white mb-1">Ticket refusé</h2>
+                <p class="mb-0 fs-5">{{ lookup_error }}</p>
+            </div>
+        {% endif %}
+
+        {% if reservation %}
+            {% if reservation.status == "SERVED" %}
+                <!-- Résultat plein écran vert « Servi ✓ » ou rouge si déjà servi -->
+                <div class="counter-fullscreen-ko mb-3" role="alert">
+                    <i class="bi bi-exclamation-octagon-fill display-4 d-block mb-2" aria-hidden="true"></i>
+                    <h2 class="display-md text-white mb-1">
+                        Déjà {% if reservation.fulfillment == "DELIVERY" %}livré{% else %}servi{% endif %}{% if reservation.served_at %} à {{ reservation.served_at|date:"H:i" }}{% endif %}
+                    </h2>
+                    <p class="mb-0 fs-5">
+                        {{ reservation.beneficiary.full_name }} · Code {{ reservation.short_code }}
+                    </p>
+                </div>
+            {% elif reservation.status == "CONFIRMED" and reservation.amount_due_at_pickup == 0 %}
+                <section class="counter-fullscreen-ok mb-3" aria-label="Ticket prêt à servir">
+                    <i class="bi bi-check-circle-fill display-4 d-block mb-2" aria-hidden="true"></i>
+                    <div class="short-code text-white mb-1">{{ reservation.short_code }}</div>
+                    <h2 class="display-md text-white mb-2">{{ reservation.beneficiary.full_name }}</h2>
+                    <div class="mb-3 fs-5">
+                        {% for item in reservation.items.all %}
+                            <span class="badge bg-white text-dark me-1">{{ item.option.dish.name }} ×{{ item.portions }}</span>
+                        {% endfor %}
+                        {% if reservation.skip_starter %}<span class="badge bg-dark">Sans entrée</span>{% endif %}
+                        {% if reservation.skip_dessert %}<span class="badge bg-dark">Sans dessert</span>{% endif %}
+                    </div>
+                    <form method="post" action="{% url 'canteen:serve_ticket' reservation.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-light btn-lg fw-bold px-5">
+                            <i class="bi bi-check2-all me-1" aria-hidden="true"></i>
+                            {% if reservation.fulfillment == "DELIVERY" %}Livré ✓{% else %}Servi ✓{% endif %}
+                        </button>
+                    </form>
+                </section>
+            {% elif reservation.amount_due_at_pickup > 0 %}
+                <div class="counter-fullscreen-ko mb-3" role="alert">
+                    <i class="bi bi-phone-vibrate display-4 d-block mb-2" aria-hidden="true"></i>
+                    <h2 class="display-md text-white mb-1">Règlement attendu sur le téléphone</h2>
+                    <p class="mb-3 fs-5">
+                        {{ reservation.beneficiary.full_name }} doit valider <strong>{{ reservation.amount_due_at_pickup|fcfa }}</strong> dans son application avant la remise.
+                    </p>
+                    <a href="?code={{ reservation.short_code }}" class="btn btn-light fw-bold">
+                        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Actualiser
+                    </a>
+                </div>
+            {% else %}
+                <div class="counter-fullscreen-ko mb-3" role="alert">
+                    <i class="bi bi-x-circle-fill display-4 d-block mb-2" aria-hidden="true"></i>
+                    <h2 class="display-md text-white mb-1">Ticket non valide</h2>
+                    <p class="mb-0 fs-5">Statut : {{ reservation.status_display_label }}</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <section class="chart-card" aria-labelledby="recent-served-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <div class="eyebrow">Passages récents</div>
+                    <h2 class="h6 mb-0" id="recent-served-title">Derniers plateaux remis</h2>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-clean align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Bénéficiaire</th>
+                            <th>Statut</th>
+                            <th class="text-end">Heure</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in recent_served %}
+                            <tr>
+                                <td><strong class="font-monospace tabular">{{ res.short_code }}</strong></td>
+                                <td class="fw-semibold">{{ res.beneficiary.full_name }}</td>
+                                <td>
+                                    <span class="badge-status status-ok">
+                                        {% if res.fulfillment == "DELIVERY" %}Livré ✓{% else %}Servi ✓{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-end tabular muted">{{ res.served_at|date:"H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center muted py-4">Aucun plateau servi pour le moment.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

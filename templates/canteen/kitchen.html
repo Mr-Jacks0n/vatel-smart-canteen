@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Cuisine — Consolidation · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Espace Équipe · Production culinaire</div>
+        <h1 class="display-lg mb-0">Cuisine — Consolidation des quantités</h1>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        {% if selected_service %}
+            <a href="{% url 'canteen:kitchen_export_csv' %}?date={{ selected_service.date|date:'Y-m-d' }}" class="btn btn-soft btn-sm">
+                <i class="bi bi-filetype-csv" aria-hidden="true"></i>Exporter CSV
+            </a>
+        {% endif %}
+        <a href="{% url 'canteen:counter' %}" class="btn btn-piment btn-sm">
+            <i class="bi bi-qr-code-scan" aria-hidden="true"></i>Comptoir QR
+        </a>
+        <a href="{% url 'canteen:deliveries' %}" class="btn btn-soft btn-sm">
+            <i class="bi bi-truck" aria-hidden="true"></i>Livraisons
+        </a>
+    </div>
+</div>
+
+<form method="get" class="surface p-3 mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-sm-auto flex-grow-1">
+            <label class="form-label mb-1" for="id_svc_date">Service à afficher</label>
+            <select name="date" id="id_svc_date" class="form-select">
+                {% for svc in services %}
+                    <option value="{{ svc.date|date:'Y-m-d' }}" {% if selected_service and svc.pk == selected_service.pk %}selected{% endif %}>
+                        {{ svc.date|date:"l j F Y" }} — {{ svc.get_service_type_display }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12 col-sm-auto">
+            <button type="submit" class="btn btn-brand w-100">
+                <i class="bi bi-funnel" aria-hidden="true"></i>Afficher
+            </button>
+        </div>
+    </div>
+</form>
+
+{% if consolidation %}
+    <!-- Indicateurs clés de production -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card text-center">
+                <div class="kpi-label justify-content-center">Repas prévus</div>
+                <div class="kitchen-48 mt-2">{{ consolidation.total_meals }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card text-center">
+                <div class="kpi-label justify-content-center">Portions supp.</div>
+                <div class="kitchen-48 mt-2">{{ consolidation.extra_portions_count }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card text-center">
+                <div class="kpi-label justify-content-center">Sans entrée</div>
+                <div class="kitchen-48 mt-2">{{ consolidation.skip_starter_count }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card text-center">
+                <div class="kpi-label justify-content-center">Sans dessert</div>
+                <div class="kitchen-48 mt-2">{{ consolidation.skip_dessert_count }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card text-center">
+                <div class="kpi-label justify-content-center">Je ne mange pas</div>
+                <div class="kitchen-48 mt-2">{{ consolidation.declined_count }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="kpi-card text-center">
+                <div class="kpi-label justify-content-center">Sans réponse</div>
+                <div class="kitchen-48 mt-2">{{ consolidation.no_response_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-7">
+            <section class="chart-card h-100" aria-labelledby="prod-cat-title">
+                <div class="eyebrow">Production par plat</div>
+                <h2 class="h5 fw-bold mb-3" id="prod-cat-title">Portions exactes à dresser</h2>
+
+                {% for cat_label, rows in consolidation.by_category %}
+                    <div class="mb-3">
+                        <div class="mb-2">
+                            <span class="badge-soft">{{ cat_label }}</span>
+                        </div>
+                        <div class="surface-flat px-3 py-1">
+                            {% for row in rows %}
+                                <div class="list-row">
+                                    <div class="list-main">
+                                        <p class="vs-product-title mb-0">{{ row.dish_name }}</p>
+                                    </div>
+                                    <span class="kitchen-portion-badge">{{ row.portions }}</span>
+                                </div>
+                            {% empty %}
+                                <div class="py-2 small muted">Aucune portion réservée dans cette catégorie.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-5">
+            <section class="chart-card h-100 border-danger vsc-border-2" aria-labelledby="allergy-day-title">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <div class="eyebrow text-danger">Vigilance sanitaire</div>
+                        <h2 class="h5 fw-bold mb-0 text-danger" id="allergy-day-title">Allergies du jour</h2>
+                    </div>
+                    <span class="chip chip-allergen">
+                        <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>{{ consolidation.allergy_alerts|length }}
+                    </span>
+                </div>
+
+                <div class="d-grid gap-2">
+                    {% for alert in consolidation.allergy_alerts %}
+                        <div class="allergen-box">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="fs-5 text-dark">{{ alert.beneficiary }}</strong>
+                                <span class="badge bg-danger fs-6 font-monospace">{{ alert.short_code }}</span>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                                {% for a in alert.allergies %}
+                                    <span class="chip chip-allergen">
+                                        <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>Allergie : {{ a }}
+                                    </span>
+                                {% endfor %}
+                                {% for i in alert.intolerances %}
+                                    <span class="chip chip-warn-soft">
+                                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>Intolérance : {{ i }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="surface-flat p-4 text-center muted">
+                            Aucune allergie déclarée sur les réservations de ce service.
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </div>
+{% else %}
+    <div class="surface empty-state">
+        <i class="bi bi-journal-x" aria-hidden="true"></i>
+        <strong>Le menu de la semaine arrive bientôt.</strong>
+        <p class="small mb-0">Aucun service publié pour le moment.</p>
+    </div>
+{% endif %}
+{% endblock %}
