@@ -1,0 +1,19 @@
+{
+  "name": "Vatel Smart Canteen",
+  "short_name": "Vatel Canteen",
+  "description": "Réserver, préparer juste, servir vite, payer simplement.",
+  "start_url": "/menu/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F6F6F6",
+  "theme_color": "#1D1D1B",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/static/img/logo-vatel.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

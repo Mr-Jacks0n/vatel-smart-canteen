@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Hors ligne — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="vsc-narrow py-4">
+    <div class="surface p-4 p-md-5 text-center">
+        <img src="{% static 'img/logo-vatel.svg' %}" alt="Logo Vatel" class="brand-logo mx-auto mb-3">
+        <div class="eyebrow mb-2">Mode hors ligne</div>
+        <h1 class="display-md mb-2">Vous êtes hors ligne</h1>
+        <p class="muted mb-4">
+            La connexion Internet est indisponible. Vous pouvez consulter le menu public mis en cache ; les réservations et paiements nécessitent une connexion active.
+        </p>
+        <a href="/menu/" class="btn btn-brand">
+            <i class="bi bi-journal-text" aria-hidden="true"></i>Consulter le menu public
+        </a>
+    </div>
+</div>
+{% endblock %}
