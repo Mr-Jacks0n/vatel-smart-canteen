@@ -202,13 +202,12 @@
                                 <span class="d-block small muted fw-normal">Sur le plat principal (non couverte par le forfait annuel)</span>
                             </label>
                             <input
-                                class="form-check-input ms-2"
+                                class="form-check-input ms-2 vsc-switch-lg"
                                 type="checkbox"
                                 role="switch"
                                 name="extra_portions"
                                 id="id_extra_portions"
                                 value="1"
-                                style="width: 2.6rem; height: 1.35rem;"
                                 hx-get="{% url 'reservations:price_preview' service.pk %}"
                                 hx-include="#compose-form"
                                 hx-target="#price-summary-box"
