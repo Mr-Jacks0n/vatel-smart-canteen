@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Mon profil — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div>
+                <div class="eyebrow">Compte personnel</div>
+                <h1 class="display-lg mb-2">Mon profil</h1>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="chip chip-primary">
+                        <i class="bi bi-person-badge" aria-hidden="true"></i>{{ user.get_role_display }}
+                    </span>
+                    {% if user.school_id %}
+                        <span class="chip font-monospace">
+                            <i class="bi bi-card-heading" aria-hidden="true"></i>Matricule : {{ user.school_id }}
+                        </span>
+                    {% endif %}
+                    {% if user.department %}
+                        <span class="chip chip-gold">
+                            <i class="bi bi-building" aria-hidden="true"></i>{{ user.department.name }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-soft btn-sm text-danger">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Déconnexion
+                </button>
+            </form>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <section class="surface p-3 p-md-4 mb-4" aria-labelledby="profile-info-title">
+                <div class="eyebrow mb-1">Identité &amp; contact</div>
+                <h2 class="h5 mb-3" id="profile-info-title">Coordonnées</h2>
+
+                <div class="row g-3">
+                    <div class="col-12 {% if user.department %}col-md-6{% endif %}">
+                        <label class="form-label" for="id_email_readonly">Adresse e-mail</label>
+                        <input type="email" id="id_email_readonly" class="form-control" value="{{ user.email }}" readonly disabled>
+                    </div>
+                    {% if user.department %}
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="id_dept_readonly">Département / Direction (lecture seule)</label>
+                            <input type="text" id="id_dept_readonly" class="form-control" value="{{ user.department.name }}" readonly disabled>
+                        </div>
+                    {% endif %}
+                    {% for field in user_form %}
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            {% if dietary_form %}
+                <section class="surface p-3 p-md-4 mb-4" aria-labelledby="profile-diet-title">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <div>
+                            <div class="eyebrow">Santé &amp; préférences</div>
+                            <h2 class="h5 mb-0" id="profile-diet-title">
+                                <i class="bi bi-heart-pulse text-danger me-1" aria-hidden="true"></i>Profil alimentaire
+                            </h2>
+                        </div>
+                        <span class="chip"><i class="bi bi-lock" aria-hidden="true"></i>Privé</span>
+                    </div>
+
+                    <div class="alert-soft alert-info mb-3" role="note">
+                        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                        <div class="small">
+                            <strong>Confidentialité :</strong> ces informations restent strictement privées (vous, vos parents liés et la vigilance cuisine du jour). Vos allergies et intolérances déclenchent une alerte explicite lors de la réservation ; les régimes s'affichent à titre informatif.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="chip chip-allergen">
+                                <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>{{ dietary_form.allergies.label }}
+                            </span>
+                        </div>
+                        <div class="row row-cols-2 row-cols-md-3 g-2">
+                            {% for checkbox in dietary_form.allergies %}
+                                <div class="col">
+                                    <label class="vsc-check-pill family-allergy" for="{{ checkbox.id_for_label }}">
+                                        {{ checkbox.tag }}
+                                        <span class="vsc-check-box" aria-hidden="true"></span>
+                                        <span>{{ checkbox.choice_label }}</span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="chip chip-warn-soft">
+                                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>{{ dietary_form.intolerances.label }}
+                            </span>
+                        </div>
+                        <div class="row row-cols-2 row-cols-md-3 g-2">
+                            {% for checkbox in dietary_form.intolerances %}
+                                <div class="col">
+                                    <label class="vsc-check-pill family-intolerance" for="{{ checkbox.id_for_label }}">
+                                        {{ checkbox.tag }}
+                                        <span class="vsc-check-box" aria-hidden="true"></span>
+                                        <span>{{ checkbox.choice_label }}</span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="chip chip-ok-soft">
+                                <i class="bi bi-check2-circle" aria-hidden="true"></i>{{ dietary_form.regimes.label }}
+                            </span>
+                        </div>
+                        <div class="row row-cols-2 row-cols-md-3 g-2">
+                            {% for checkbox in dietary_form.regimes %}
+                                <div class="col">
+                                    <label class="vsc-check-pill family-regime" for="{{ checkbox.id_for_label }}">
+                                        {{ checkbox.tag }}
+                                        <span class="vsc-check-box" aria-hidden="true"></span>
+                                        <span>{{ checkbox.choice_label }}</span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-3 family-pref mb-3">
+                        <label class="form-label fw-bold" for="{{ dietary_form.preferences.id_for_label }}">
+                            <i class="bi bi-sliders me-1" aria-hidden="true"></i>{{ dietary_form.preferences.label }} (famille Préférences)
+                        </label>
+                        {{ dietary_form.preferences }}
+                        {% if dietary_form.preferences.errors %}
+                            <div class="text-danger small mt-1">{{ dietary_form.preferences.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label" for="{{ dietary_form.notes.id_for_label }}">{{ dietary_form.notes.label }}</label>
+                        {{ dietary_form.notes }}
+                        {% if dietary_form.notes.errors %}
+                            <div class="text-danger small mt-1">{{ dietary_form.notes.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                </section>
+            {% endif %}
+
+            <button type="submit" class="btn btn-brand btn-lg w-100 w-md-auto">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>Enregistrer les modifications
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
