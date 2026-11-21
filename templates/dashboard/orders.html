@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Commandes — Administration · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Administration · Suivi des réservations</div>
+        <h1 class="display-lg mb-0">Commandes &amp; Déclarations d'absence</h1>
+    </div>
+    <a href="{% url 'dashboard:home' %}" class="btn btn-soft btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>Tableau de bord
+    </a>
+</div>
+
+<form method="get" class="surface p-3 mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-6 col-md-3">
+            <label class="form-label mb-1" for="id_filter_date">Date</label>
+            <input type="date" id="id_filter_date" name="date" value="{{ filters.date }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label mb-1" for="id_filter_status">Statut</label>
+            <select id="id_filter_status" name="status" class="form-select">
+                <option value="">Tous</option>
+                {% for code, label in status_choices %}
+                    <option value="{{ code }}" {% if filters.status == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label mb-1" for="id_filter_payment">Paiement</label>
+            <select id="id_filter_payment" name="payment_status" class="form-select">
+                <option value="">Tous</option>
+                {% for code, label in payment_choices %}
+                    <option value="{{ code }}" {% if filters.payment_status == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label mb-1" for="id_filter_dept">Département</label>
+            <select id="id_filter_dept" name="department" class="form-select">
+                <option value="">Tous</option>
+                {% for dept in departments %}
+                    <option value="{{ dept.pk }}" {% if filters.department == dept.pk|stringformat:"s" %}selected{% endif %}>{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12 col-md-2">
+            <button type="submit" class="btn btn-brand w-100">
+                <i class="bi bi-funnel" aria-hidden="true"></i>Filtrer
+            </button>
+        </div>
+    </div>
+</form>
+
+<section class="chart-card" aria-label="Liste des commandes">
+    <div class="table-responsive">
+        <table class="table table-clean align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Bénéficiaire</th>
+                    <th>Rôle / Département</th>
+                    <th>Statut</th>
+                    <th>Paiement</th>
+                    <th>Total</th>
+                    <th class="text-end">Code</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                    <tr>
+                        <td class="tabular">{{ o.service.date|date:"d/m/Y" }}</td>
+                        <td class="fw-semibold">{{ o.beneficiary.full_name }}</td>
+                        <td class="small muted">
+                            {{ o.beneficiary.get_role_display }}
+                            {% if o.beneficiary.department %} · {{ o.beneficiary.department.name }}{% endif %}
+                        </td>
+                        <td>
+                            {% if o.fulfillment == "DELIVERY" and o.status == "SERVED" %}
+                                <span class="badge-delivery"><i class="bi bi-truck" aria-hidden="true"></i>{{ o.status_display_label }}</span>
+                            {% else %}
+                                <span class="badge-status {% if o.status == 'SERVED' or o.status == 'CONFIRMED' %}status-ok{% elif o.status == 'DECLINED' %}status-off{% else %}status-danger{% endif %}">
+                                    {{ o.status_display_label }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="small">{{ o.get_payment_status_display }}</td>
+                        <td class="tabular fw-semibold">{{ o.total_price|fcfa }}</td>
+                        <td class="text-end"><strong class="font-monospace tabular">{{ o.short_code|default:"—" }}</strong></td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center muted py-4">Aucune commande correspondant aux filtres.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

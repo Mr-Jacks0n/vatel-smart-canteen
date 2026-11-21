@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Journal des opérations sensibles — Administration · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Traçabilité &amp; Sécurité</div>
+        <h1 class="display-lg mb-0">Journal des opérations sensibles</h1>
+    </div>
+    <a href="{% url 'dashboard:home' %}" class="btn btn-soft btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>Tableau de bord
+    </a>
+</div>
+
+<section class="chart-card" aria-label="Journal d'audit">
+    <div class="table-responsive">
+        <table class="table table-clean align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Date &amp; Heure</th>
+                    <th>Auteur</th>
+                    <th>Action</th>
+                    <th>Cible</th>
+                    <th>Motif enregistré</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td class="text-nowrap tabular small">{{ log.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="fw-semibold">{{ log.actor.email|default:"Système" }}</td>
+                        <td><span class="chip font-monospace">{{ log.action }}</span></td>
+                        <td class="small">{{ log.target_repr }}</td>
+                        <td class="small muted">{{ log.reason }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center muted py-4">Aucune opération sensible journalisée.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

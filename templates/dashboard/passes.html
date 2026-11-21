@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Forfaits et virements — Administration · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Forfait « Année soldée » &amp; Virements bancaires</div>
+        <h1 class="display-lg mb-0">Forfaits annuels &amp; Virements à confirmer</h1>
+    </div>
+    <a href="{% url 'dashboard:home' %}" class="btn btn-soft btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>Tableau de bord
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-7">
+        <section class="chart-card mb-3" aria-labelledby="pending-transfers-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <div class="eyebrow">Validation administrative</div>
+                    <h2 class="h6 mb-0" id="pending-transfers-title">Virements bancaires en attente de validation</h2>
+                </div>
+                <span class="op-badge op-annual"><i class="bi bi-bank" aria-hidden="true"></i>{{ pending_transfers|length }} en attente</span>
+            </div>
+
+            <div class="surface-flat px-3 py-1">
+                {% for pay in pending_transfers %}
+                    <div class="list-row flex-wrap">
+                        <span class="list-icon op-annual-icon"><i class="bi bi-award-fill" aria-hidden="true"></i></span>
+                        <div class="list-main">
+                            <p class="list-title">
+                                <code class="me-1">{{ pay.reference }}</code> · <strong>{{ pay.amount|fcfa }}</strong>
+                            </p>
+                            <p class="list-sub">
+                                Élève : <strong>{{ pay.beneficiary.full_name }}</strong> · Payeur : {{ pay.payer.full_name }}
+                            </p>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="confirm_transfer">
+                            <input type="hidden" name="reference" value="{{ pay.reference }}">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bi bi-check2-circle" aria-hidden="true"></i>Confirmer le virement
+                            </button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <div class="py-3 text-center small muted">Aucun virement bancaire en attente.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="chart-card" aria-labelledby="active-passes-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <div class="eyebrow">Couverture annuelle</div>
+                    <h2 class="h6 mb-0" id="active-passes-title">Forfaits « Année soldée » actifs ({{ active_passes|length }})</h2>
+                </div>
+                <span class="badge-annual-pass"><i class="bi bi-award-fill" aria-hidden="true"></i>Année soldée</span>
+            </div>
+
+            <div class="surface-flat px-3 py-1">
+                {% for p in active_passes %}
+                    <div class="list-row">
+                        <span class="list-icon op-annual-icon"><i class="bi bi-award-fill" aria-hidden="true"></i></span>
+                        <div class="list-main">
+                            <p class="list-title">{{ p.student.full_name }} — {{ p.school_year }}</p>
+                            <p class="list-sub">
+                                {{ p.valid_from|date:"d/m/Y" }} → {{ p.valid_until|date:"d/m/Y" }}
+                                {% if p.payment %} · Réf. {{ p.payment.reference }}{% else %} · Activation manuelle ({{ p.reason }}){% endif %}
+                            </p>
+                        </div>
+                        <span class="badge-annual-pass"><i class="bi bi-check2" aria-hidden="true"></i>Année soldée</span>
+                    </div>
+                {% empty %}
+                    <div class="py-3 text-center small muted">Aucun forfait actif.</div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <section class="chart-card" aria-labelledby="manual-pass-title">
+            <div class="eyebrow">Gouvernance</div>
+            <h2 class="h6 mb-3" id="manual-pass-title">Activation manuelle (motif obligatoire)</h2>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="manual_pass">
+                <div class="mb-3">
+                    <label class="form-label" for="id_manual_student">Élève bénéficiaire</label>
+                    <select name="student_id" id="id_manual_student" class="form-select" required>
+                        {% for s in students %}
+                            <option value="{{ s.pk }}">{{ s.full_name }} ({{ s.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="id_manual_reason">Motif (journalisé)</label>
+                    <input type="text" name="reason" id="id_manual_reason" class="form-control" placeholder="Ex. Paiement reçu par virement hors appli" required>
+                </div>
+                <button type="submit" class="btn btn-brand w-100">
+                    <i class="bi bi-award-fill" aria-hidden="true"></i>Activer le forfait « Année soldée »
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

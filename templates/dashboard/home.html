@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load static canteen_tags %}
+
+{% block title %}Tableau de bord — Administration · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<!-- En-tête Administration -->
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Administration · Pilotage financier &amp; opérationnel</div>
+        <h1 class="display-lg mb-0">Tableau de bord de la cantine</h1>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="?period=day" class="btn {% if period == 'day' %}btn-brand{% else %}btn-soft{% endif %} btn-sm">Jour</a>
+        <a href="?period=week" class="btn {% if period == 'week' %}btn-brand{% else %}btn-soft{% endif %} btn-sm">Semaine</a>
+        <a href="?period=month" class="btn {% if period == 'month' %}btn-brand{% else %}btn-soft{% endif %} btn-sm">Mois</a>
+        <a href="{% url 'dashboard:closure' %}" class="btn btn-piment btn-sm">
+            <i class="bi bi-clock-history" aria-hidden="true"></i>Clôture 18h00
+        </a>
+    </div>
+</div>
+
+<!-- Indicateurs clés en cartes -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <article class="sego-kpi sego-kpi-lagoon">
+            <div>
+                <div class="sego-kpi-num">{{ fin.total_collected|fcfa }}</div>
+                <div class="sego-kpi-label">Total encaissé ({{ fin.start_date|date:"d/m" }} → {{ fin.end_date|date:"d/m" }})</div>
+                <div class="sego-kpi-sub">Cumul des 3 opérations d'encaissement</div>
+            </div>
+            <span class="sego-kpi-ring" aria-hidden="true">
+                <i class="bi bi-cash-stack"></i>
+            </span>
+        </article>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <article class="sego-kpi sego-kpi-anthracite">
+            <div>
+                <div class="sego-kpi-num">{{ ops.today_planned }}</div>
+                <div class="sego-kpi-label">Repas réservés</div>
+                <div class="sego-kpi-sub">Débits programmés : {{ fin.scheduled_count }} ({{ fin.scheduled_amount|fcfa }})</div>
+            </div>
+            <span class="sego-kpi-ring" aria-hidden="true">
+                <i class="bi bi-calendar2-check"></i>
+            </span>
+        </article>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <article class="sego-kpi sego-kpi-mango">
+            <div>
+                <div class="sego-kpi-num">{{ ops.pickup_rate }} %</div>
+                <div class="sego-kpi-label">Taux de retrait</div>
+                <div class="sego-kpi-sub">{{ ops.today_served }} servis / {{ ops.today_remaining }} restants</div>
+            </div>
+            <span class="sego-kpi-ring has-ratio-ring" aria-hidden="true">
+                <i class="bi bi-pie-chart-fill"></i>
+            </span>
+        </article>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <article class="sego-kpi sego-kpi-chili">
+            <div>
+                <div class="sego-kpi-num">{{ fin.total_wallet_balances|fcfa }}</div>
+                <div class="sego-kpi-label">Solde total des portefeuilles</div>
+                <div class="sego-kpi-sub">Disponible des familles — hors recettes</div>
+            </div>
+            <span class="sego-kpi-ring" aria-hidden="true">
+                <i class="bi bi-safe2"></i>
+            </span>
+        </article>
+    </div>
+</div>
+
+<!-- Synthèse des commandes & Encaissements -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-xl-6">
+        <section class="chart-card h-100 d-flex flex-column justify-content-between" aria-labelledby="sego-orders-summary">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <h2 class="h5 fw-bold mb-0" id="sego-orders-summary">Synthèse des commandes</h2>
+                        <div class="small muted">Période : {{ fin.start_date|date:"d/m/Y" }} → {{ fin.end_date|date:"d/m/Y" }}</div>
+                    </div>
+                    <span class="badge-soft">{{ ops.today_planned }} repas prévus</span>
+                </div>
+
+                <!-- Jauge du taux de retrait -->
+                <div class="d-flex flex-wrap align-items-center gap-3 my-3 p-3 surface-flat">
+                    <div class="sego-kpi-ring has-ratio-ring vsc-kpi-ring-badge">
+                        {{ ops.pickup_rate }}%
+                    </div>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="eyebrow">Consommations nettes portefeuille</div>
+                        <div class="display-md tabular mb-1">{{ fin.net_wallet_consumption|fcfa }}</div>
+                        <div class="small muted">
+                            Portions supplémentaires : <strong class="text-dark tabular">{{ ops.today_extra }} ({{ fin.extra_portions_amount|fcfa }})</strong>
+                            · Sans réponse : <strong class="text-dark tabular">{{ ops.today_no_response }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sego-stat-boxes-4">
+                <div class="sego-stat-box">
+                    <strong>{{ fin.delivery_count }}</strong>
+                    <span>Livrés</span>
+                </div>
+                <div class="sego-stat-box">
+                    <strong>{{ ops.today_served }}</strong>
+                    <span>Servis au comptoir</span>
+                </div>
+                <div class="sego-stat-box">
+                    <strong>{{ ops.today_declined }}</strong>
+                    <span>Je ne mange pas</span>
+                </div>
+                <div class="sego-stat-box">
+                    <strong class="text-danger">{{ ops.not_picked_up }}</strong>
+                    <span>Non retirés</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-6">
+        <section class="chart-card h-100" aria-labelledby="encaissements-title">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <div class="eyebrow">Module financier</div>
+                    <h2 class="h5 fw-bold mb-0" id="encaissements-title">Encaissements : trois lignes distinctes</h2>
+                </div>
+                <a href="{% url 'dashboard:passes' %}" class="btn btn-soft btn-sm">
+                    Virements en attente ({{ fin.pending_transfers_count }})
+                </a>
+            </div>
+
+            <div class="table-responsive mb-3">
+                <table class="table table-clean align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Opération d'encaissement</th>
+                            <th>Détail</th>
+                            <th class="text-end">Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="op-badge op-topup">
+                                    <i class="bi bi-wallet2" aria-hidden="true"></i>Recharges ponctuelles
+                                </span>
+                            </td>
+                            <td class="small muted">Crédit du solde Vatel Cantine</td>
+                            <td class="text-end fw-bold tabular">{{ fin.topup_total|fcfa }}</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="op-badge op-annual">
+                                    <i class="bi bi-award-fill" aria-hidden="true"></i>Prépaiements annuels
+                                </span>
+                            </td>
+                            <td class="small muted">{{ fin.active_passes_count }} forfait(s) « Année soldée » actif(s)</td>
+                            <td class="text-end fw-bold tabular">{{ fin.annual_total|fcfa }}</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="op-badge op-pickup">
+                                    <i class="bi bi-phone-vibrate" aria-hidden="true"></i>Paiements au retrait
+                                </span>
+                            </td>
+                            <td class="small muted">Réglés dans l'application avant remise</td>
+                            <td class="text-end fw-bold tabular">{{ fin.pickup_total|fcfa }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {{ ops.chart_data|json_script:"week-chart-data" }}
+            <canvas id="weekReservationsChart" height="105"></canvas>
+        </section>
+    </div>
+</div>
+
+<!-- Personnel par Département & Plats les plus demandés -->
+<div class="row g-3">
+    <div class="col-12 col-xl-7">
+        <section class="chart-card h-100" aria-labelledby="dept-stats-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <div class="eyebrow">Personnel</div>
+                    <h2 class="h5 fw-bold mb-0" id="dept-stats-title">Répartition par département et direction</h2>
+                </div>
+                <a href="{% url 'dashboard:users' %}" class="btn btn-soft btn-sm">Gérer les comptes</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-clean align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Département / Direction</th>
+                            <th>Membres inscrits</th>
+                            <th class="text-end">Réservations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in ops.dept_stats %}
+                            <tr>
+                                <td class="fw-semibold">{{ d.name }}</td>
+                                <td class="tabular">{{ d.staff_count }}</td>
+                                <td class="text-end fw-bold tabular">{{ d.reservations_count }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center muted py-3">Aucun département enregistré.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-5">
+        <section class="chart-card h-100" aria-labelledby="top-dishes-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <div class="eyebrow">Classement cuisine</div>
+                    <h2 class="h5 fw-bold mb-0" id="top-dishes-title">Plats les plus demandés</h2>
+                </div>
+                <a href="{% url 'menus:admin_service_list' %}" class="link-more">Menus</a>
+            </div>
+            <div>
+                {% for dish in ops.top_dishes|slice:":3" %}
+                    <div class="sego-trending-row">
+                        <span class="sego-rank">#{{ forloop.counter }}</span>
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="fw-bold text-truncate">{{ dish.option__dish__name }}</div>
+                            <div class="small muted"><strong class="text-primary tabular">{{ dish.portions }}</strong> portion(s) réservée(s)</div>
+                        </div>
+                        <img class="sego-trending-thumb" src="{% static 'img/dishes/attieke.jpg' %}" alt="{{ dish.option__dish__name }}">
+                    </div>
+                {% empty %}
+                    <div class="py-4 text-center small muted">Aucune réservation sur la période sélectionnée.</div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'vendor/chart.umd.min.js' %}" defer></script>
+<script src="{% static 'js/dashboard_chart.js' %}" defer></script>
+{% endblock %}

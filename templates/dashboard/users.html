@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Utilisateurs — Administration · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Administration · Gouvernance des comptes</div>
+        <h1 class="display-lg mb-0">Utilisateurs, Départements &amp; Liens parents</h1>
+    </div>
+    <a href="{% url 'dashboard:home' %}" class="btn btn-soft btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>Tableau de bord
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-xl-5">
+        <section class="chart-card mb-3" aria-labelledby="create-user-title">
+            <div class="eyebrow">Création réservée à l'administrateur</div>
+            <h2 class="h6 mb-3" id="create-user-title">Créer un compte (Personnel, Parent, Équipe, Élève)</h2>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_user">
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <label class="form-label mb-1" for="id_first_name">Prénom</label>
+                        <input type="text" id="id_first_name" name="first_name" class="form-control" placeholder="Prénom" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label mb-1" for="id_last_name">Nom</label>
+                        <input type="text" id="id_last_name" name="last_name" class="form-control" placeholder="Nom" required>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1" for="id_user_email">Adresse e-mail</label>
+                    <input type="email" id="id_user_email" name="email" class="form-control" placeholder="nom@vatel.ci" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1" for="id_user_password">Mot de passe initial</label>
+                    <input type="password" id="id_user_password" name="password" class="form-control" placeholder="Mot de passe initial" required>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label mb-1" for="id_user_role">Rôle</label>
+                    <select id="id_user_role" name="role" class="form-select" required>
+                        <option value="PERSONNEL">Personnel (département obligatoire)</option>
+                        <option value="PARENT">Parent</option>
+                        <option value="EQUIPE">Équipe cantine</option>
+                        <option value="ELEVE">Élève</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label mb-1" for="id_user_dept">Département / Direction (obligatoire pour Personnel)</label>
+                    <select id="id_user_dept" name="department" class="form-select">
+                        <option value="">— Sélectionner un département —</option>
+                        {% for d in departments %}
+                            <option value="{{ d.pk }}">{{ d.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-brand w-100">
+                    <i class="bi bi-person-plus" aria-hidden="true"></i>Créer le compte
+                </button>
+            </form>
+        </section>
+
+        <section class="chart-card mb-3" aria-labelledby="link-parent-title">
+            <div class="eyebrow">Espace Parent</div>
+            <h2 class="h6 mb-3" id="link-parent-title">Créer un lien Parent ↔ Enfant</h2>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="link_parent">
+                <div class="mb-2">
+                    <label class="form-label mb-1" for="id_parent_sel">Parent</label>
+                    <select id="id_parent_sel" name="parent_id" class="form-select" required>
+                        {% for p in parents %}
+                            <option value="{{ p.pk }}">{{ p.full_name }} ({{ p.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label mb-1" for="id_child_sel">Élève</label>
+                    <select id="id_child_sel" name="child_id" class="form-select" required>
+                        {% for s in students %}
+                            <option value="{{ s.pk }}">{{ s.full_name }} ({{ s.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-link-45deg" aria-hidden="true"></i>Valider le lien Parent-Enfant
+                </button>
+            </form>
+        </section>
+
+        <section class="chart-card" aria-labelledby="create-dept-title">
+            <div class="eyebrow">Référentiel Personnel</div>
+            <h2 class="h6 mb-2" id="create-dept-title">Ajouter un département ou une direction</h2>
+            <form method="post" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_department">
+                <label class="visually-hidden" for="id_dept_name">Nom du département</label>
+                <input type="text" id="id_dept_name" name="name" class="form-control" placeholder="Ex. Direction Pédagogique" required>
+                <button type="submit" class="btn btn-soft">Ajouter</button>
+            </form>
+        </section>
+    </div>
+
+    <div class="col-12 col-xl-7">
+        <section class="chart-card" aria-labelledby="users-list-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <div class="eyebrow">Annuaire</div>
+                    <h2 class="h6 mb-0" id="users-list-title">Comptes enregistrés ({{ users|length }})</h2>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-clean align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nom &amp; E-mail</th>
+                            <th>Rôle</th>
+                            <th>Département</th>
+                            <th>Statut</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">
+                                        {{ u.full_name }}
+                                        {% if u.school_id %}
+                                            <span class="chip font-monospace ms-1 chip-code-xs">{{ u.school_id }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="small muted">{{ u.email }}</div>
+                                </td>
+                                <td><span class="chip">{{ u.get_role_display }}</span></td>
+                                <td class="small">{{ u.department.name|default:"—" }}</td>
+                                <td>
+                                    {% if u.is_active %}
+                                        <span class="badge-status status-ok">Actif</span>
+                                    {% else %}
+                                        <span class="badge-status status-danger">Suspendu</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if u.pk != user.pk %}
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="toggle_active">
+                                            <input type="hidden" name="user_id" value="{{ u.pk }}">
+                                            <button type="submit" class="btn btn-soft btn-sm">
+                                                {% if u.is_active %}Suspendre{% else %}Réactiver{% endif %}
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

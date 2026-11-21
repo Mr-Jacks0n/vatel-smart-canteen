@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Clôture quotidienne (18h) — Administration · Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="admin-topbar">
+    <div>
+        <div class="eyebrow">Débits à la veille sur Solde Vatel Cantine</div>
+        <h1 class="display-lg mb-0">Clôture quotidienne des réservations</h1>
+    </div>
+    <a href="{% url 'dashboard:home' %}" class="btn btn-soft btn-sm">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>Tableau de bord
+    </a>
+</div>
+
+<section class="chart-card mb-3" aria-labelledby="run-closure-title">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <div class="eyebrow">Processus de clôture idempotent</div>
+            <h2 class="h5 mb-1" id="run-closure-title">
+                Réservations en attente de débit (<code>SCHEDULED</code>) : <span class="tabular">{{ scheduled_count }}</span>
+            </h2>
+            <p class="small muted mb-0">
+                La clôture exécute les débits programmés (journaliers et hebdomadaires), bascule les soldes insuffisants en « à régler via l'appli avant remise » (<code>TO_PAY_AT_PICKUP</code>) et fige la consolidation cuisine. Plusieurs exécutions ne créent jamais de double débit.
+            </p>
+        </div>
+        <form method="post" class="d-flex flex-wrap align-items-center gap-3">
+            {% csrf_token %}
+            <div class="form-check mb-0">
+                <input class="form-check-input" type="checkbox" name="force" id="id_force_closure" checked>
+                <label class="form-check-label small fw-semibold" for="id_force_closure">
+                    Mode démonstration (inclure services à venir)
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i>Exécuter la clôture maintenant
+            </button>
+        </form>
+    </div>
+</section>
+
+{% if last_summary %}
+    <div class="alert-soft alert-success mb-3" role="status">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <div>
+            <strong>Dernière clôture exécutée :</strong>
+            {{ last_summary.services_closed }} service(s) traité(s) ·
+            <strong>{{ last_summary.debited_count }} débit(s) ({{ last_summary.debited_amount|fcfa }})</strong> ·
+            {{ last_summary.fallback_pickup_count }} repli(s) en paiement via l'appli ·
+            {{ last_summary.cancelled_count }} annulation(s).
+        </div>
+    </div>
+{% endif %}
+
+<section class="chart-card" aria-labelledby="services-state-title">
+    <div class="eyebrow">Calendrier des services</div>
+    <h2 class="h6 mb-2" id="services-state-title">État de clôture par service</h2>
+    <div class="table-responsive">
+        <table class="table table-clean align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Heure limite</th>
+                    <th class="text-end">Statut de clôture</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in services %}
+                    <tr>
+                        <td class="text-capitalize fw-semibold">{{ s.date|date:"l j F Y" }}</td>
+                        <td class="tabular small muted">{{ s.reservation_deadline|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end">
+                            {% if s.closed_at %}
+                                <span class="badge-status status-ok">Clôturé le {{ s.closed_at|date:"d/m/Y H:i" }}</span>
+                            {% else %}
+                                <span class="badge-scheduled"><i class="bi bi-clock-history" aria-hidden="true"></i>En attente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
