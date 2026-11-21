@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Mes enfants — Espace Parent{% endblock %}
+
+{% block content %}
+<section class="surface p-3 p-md-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <div class="eyebrow">Espace Parent</div>
+            <h1 class="display-lg mb-1">Mes enfants</h1>
+            <p class="small muted mb-0">Suivez les repas, le solde et le forfait de vos enfants liés.</p>
+        </div>
+        <a href="{% url 'core:notifications' %}" class="btn btn-soft">
+            <i class="bi bi-bell" aria-hidden="true"></i>Notifications
+        </a>
+    </div>
+</section>
+
+<div class="row g-3">
+    {% for card in children_cards %}
+        <div class="col-12 col-md-6">
+            <article class="surface p-3 p-md-4 h-100 d-flex flex-column" aria-label="Compte de {{ card.child.full_name }}">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        <span class="brand-mark {% if card.active_pass %}is-pass{% endif %}" aria-hidden="true">
+                            {{ card.child.first_name|slice:":1"|upper }}{{ card.child.last_name|slice:":1"|upper }}
+                        </span>
+                        <div class="min-w-0">
+                            <h2 class="h5 mb-0 text-truncate">{{ card.child.full_name }}</h2>
+                            {% if card.child.class_name %}
+                                <div class="small muted">{{ card.child.class_name }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if card.active_pass %}
+                        <span class="badge-annual-pass">
+                            <i class="bi bi-award-fill" aria-hidden="true"></i>Année soldée
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% with profile=card.child.dietary_profile %}
+                    {% if profile and profile.allergies.all %}
+                        <div class="d-flex flex-wrap gap-1 mb-3">
+                            {% for allergen in profile.allergies.all %}
+                                <span class="chip chip-allergen">
+                                    <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>{{ allergen.name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% if card.is_low_balance %}
+                    <div class="alert-soft alert-warning mb-3" role="status">
+                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                        <div class="small">
+                            <strong>Solde faible :</strong> pensez à recharger le portefeuille.
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if card.active_pass %}
+                    <div class="surface-flat p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                            <span class="eyebrow">Forfait {{ card.active_pass.school_year }}</span>
+                            <span class="badge-status status-ok">Actif</span>
+                        </div>
+                        <div class="small fw-semibold">
+                            Valide du {{ card.active_pass.valid_from|date:"d/m/Y" }} au {{ card.active_pass.valid_until|date:"d/m/Y" }}
+                        </div>
+                        <div class="small muted mt-1">
+                            1 repas complet par jour couvert (hors suppléments et livraison).
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="balance-card p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <span class="label">Solde Vatel Cantine</span>
+                            <span class="badge-scheduled"><i class="bi bi-clock-history" aria-hidden="true"></i>Veille</span>
+                        </div>
+                        <div class="amount tabular">{{ card.wallet.balance|fcfa }}</div>
+                        <div class="forecast-bar">
+                            <div class="min-w-0">
+                                <div class="f-label">Actuel</div>
+                                <div class="f-val">{{ card.wallet.balance|fcfa }}</div>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="f-label">Programmé</div>
+                                <div class="f-val {% if card.scheduled_total > 0 %}is-warn{% endif %}">
+                                    {% if card.scheduled_total > 0 %}−{% endif %}{{ card.scheduled_total|fcfa }}
+                                </div>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="f-label">Prévisionnel</div>
+                                <div class="f-val {% if card.projected_balance < 0 %}is-warn{% endif %}">
+                                    {{ card.projected_balance|fcfa }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="surface-flat p-3 mb-3 small">
+                    <div class="eyebrow mb-1">Prochaine réservation</div>
+                    {% if card.next_res %}
+                        <div class="fw-semibold text-capitalize">{{ card.next_res.service.date|date:"l j F" }}</div>
+                        <div class="muted">{{ card.next_res.get_payment_status_display }}</div>
+                    {% else %}
+                        <div class="muted">Aucune réservation à venir</div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-auto">
+                    <a href="{% url 'parents:child_detail' card.child.pk %}" class="btn btn-brand w-100">
+                        <i class="bi bi-sliders" aria-hidden="true"></i>Gérer le compte de {{ card.child.first_name }}
+                    </a>
+                </div>
+            </article>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="surface empty-state">
+                <i class="bi bi-people" aria-hidden="true"></i>
+                <strong>Aucun enfant lié à votre compte</strong>
+                <p class="small mb-0">Contactez l'administration de la cantine pour associer vos enfants.</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

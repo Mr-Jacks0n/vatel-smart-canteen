@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}{{ child.full_name }} — Espace Parent{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+    <a href="{% url 'parents:home' %}" class="link-more">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>Mes enfants
+    </a>
+</div>
+
+<section class="surface p-3 p-md-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3 min-w-0">
+            <span class="brand-mark {% if active_pass %}is-pass{% endif %}" aria-hidden="true">
+                {{ child.first_name|slice:":1"|upper }}{{ child.last_name|slice:":1"|upper }}
+            </span>
+            <div class="min-w-0">
+                <div class="eyebrow">Compte enfant lié</div>
+                <h1 class="display-md mb-0">{{ child.full_name }}</h1>
+                <div class="small muted text-truncate">{{ child.email }}{% if child.class_name %} · {{ child.class_name }}{% endif %}</div>
+            </div>
+        </div>
+        {% if active_pass %}
+            <span class="badge-annual-pass">
+                <i class="bi bi-award-fill" aria-hidden="true"></i>Année soldée ({{ active_pass.school_year }})
+            </span>
+        {% else %}
+            <div class="text-md-end">
+                <div class="eyebrow">Solde Vatel Cantine</div>
+                <div class="price fs-4">{{ wallet.balance|fcfa }}</div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-5">
+        {% if not active_pass %}
+            <section class="surface p-3 p-md-4 mb-4" aria-labelledby="parent-topup-title">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <span class="op-badge op-topup">
+                        <i class="bi bi-wallet2" aria-hidden="true"></i>Recharge ponctuelle
+                    </span>
+                    <span class="chip">Simulation</span>
+                </div>
+                <h2 class="h5 mb-1" id="parent-topup-title">Recharger le compte de {{ child.first_name }}</h2>
+                <p class="small muted mb-3">
+                    Paiement 100 % dématérialisé (Mobile Money ou carte bancaire simulée).
+                </p>
+
+                <form method="post" action="{% url 'parents:child_topup' child.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <div class="eyebrow mb-2">Montant</div>
+                        <div class="row g-2">
+                            {% for amt in topup_amounts %}
+                                <div class="{% if forloop.last and not forloop.counter|divisibleby:2 %}col-12 col-sm-6{% else %}col-6{% endif %}{% if forloop.counter <= 3 %} col-sm-4{% endif %}">
+                                    <label class="amount-chip" for="p-amt-{{ amt }}">
+                                        <input type="radio" name="amount" id="p-amt-{{ amt }}" value="{{ amt }}" {% if amt == 5000 %}checked{% elif forloop.first and 5000 not in topup_amounts %}checked{% endif %}>
+                                        <strong>{{ amt|fcfa }}</strong>
+                                        <span>{% if amt == 5000 %}défaut{% else %}choisir{% endif %}</span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="eyebrow mb-2">Moyen (simulé)</div>
+                        <div class="d-grid gap-2">
+                            {% for code, label in topup_methods %}
+                                <label class="pay-option" for="topup-method-{{ code }}">
+                                    <input type="radio" name="method" id="topup-method-{{ code }}" value="{{ code }}" {% if forloop.first %}checked{% endif %}>
+                                    <span class="pay-logo {% if code == 'WAVE' %}pay-wave{% elif code == 'ORANGE_MONEY' %}pay-orange{% elif code == 'MTN_MOMO' %}pay-mtn{% elif code == 'MOOV_MONEY' %}pay-moov{% else %}pay-bank{% endif %}" aria-hidden="true">
+                                        {% if code == 'WAVE' %}W{% elif code == 'ORANGE_MONEY' %}OM{% elif code == 'MTN_MOMO' %}MTN{% elif code == 'MOOV_MONEY' %}MV{% else %}<i class="bi bi-credit-card"></i>{% endif %}
+                                    </span>
+                                    <span class="flex-grow-1 min-w-0">
+                                        <strong class="d-block">{{ label }}</strong>
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="id_topup_phone">Téléphone Mobile Money (fictif)</label>
+                        <input type="text" name="phone_number" id="id_topup_phone" class="form-control tabular" placeholder="07 00 00 00 00">
+                    </div>
+
+                    <label class="vsc-check-pill mb-3" for="confirm-topup">
+                        <input type="checkbox" name="confirm_child" id="confirm-topup" value="on" required>
+                        <span class="vsc-check-box" aria-hidden="true"></span>
+                        <span>Je confirme vouloir recharger le compte de <strong>{{ child.full_name }}</strong>.</span>
+                    </label>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-wallet2" aria-hidden="true"></i>Recharger maintenant
+                    </button>
+                </form>
+            </section>
+
+            <section class="surface p-3 p-md-4 mb-4" aria-labelledby="parent-annual-title">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <span class="op-badge op-annual">
+                        <i class="bi bi-award-fill" aria-hidden="true"></i>Prépaiement annuel
+                    </span>
+                    <span class="chip">{{ school_year }}</span>
+                </div>
+                <h2 class="h5 mb-2" id="parent-annual-title">Forfait « Année soldée »</h2>
+
+                <div class="surface-flat p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                        <span class="small fw-semibold">Tarif annuel</span>
+                        <span class="price fs-5">{{ annual_pass_price|fcfa }}</span>
+                    </div>
+                    <div class="small muted">
+                        Validité : {{ valid_from|date:"d/m/Y" }} → {{ valid_until|date:"d/m/Y" }}.
+                        Couvre 1 repas complet par jour (hors portions supplémentaires et livraison). L'élève doit réserver avant 18h00 la veille.
+                    </div>
+                </div>
+
+                <form method="post" action="{% url 'parents:child_annual_prepayment' child.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <div class="eyebrow mb-2">Moyen de paiement</div>
+                        <div class="d-grid gap-2">
+                            {% for code, label in annual_methods %}
+                                <label class="pay-option" for="annual-method-{{ code }}">
+                                    <input type="radio" name="method" id="annual-method-{{ code }}" value="{{ code }}" {% if forloop.first %}checked{% endif %}>
+                                    <span class="pay-logo {% if code == 'WAVE' %}pay-wave{% elif code == 'ORANGE_MONEY' %}pay-orange{% elif code == 'MTN_MOMO' %}pay-mtn{% elif code == 'MOOV_MONEY' %}pay-moov{% else %}pay-bank{% endif %}" aria-hidden="true">
+                                        {% if code == 'WAVE' %}W{% elif code == 'ORANGE_MONEY' %}OM{% elif code == 'MTN_MOMO' %}MTN{% elif code == 'MOOV_MONEY' %}MV{% elif code == 'BANK_TRANSFER' %}<i class="bi bi-bank"></i>{% else %}<i class="bi bi-credit-card"></i>{% endif %}
+                                    </span>
+                                    <span class="flex-grow-1 min-w-0">
+                                        <strong class="d-block">{{ label }}</strong>
+                                        {% if code == 'BANK_TRANSFER' %}
+                                            <span class="small muted d-block">Confirmé par l'administration après réception</span>
+                                        {% endif %}
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="id_annual_phone">Téléphone Mobile Money (fictif, si applicable)</label>
+                        <input type="text" name="phone_number" id="id_annual_phone" class="form-control tabular" placeholder="07 00 00 00 00">
+                    </div>
+
+                    <label class="vsc-check-pill mb-3" for="confirm-annual">
+                        <input type="checkbox" name="confirm_child" id="confirm-annual" value="on" required>
+                        <span class="vsc-check-box" aria-hidden="true"></span>
+                        <span>Je confirme le prépaiement annuel de <strong>{{ annual_pass_price|fcfa }}</strong> pour <strong>{{ child.full_name }}</strong>.</span>
+                    </label>
+
+                    <button type="submit" class="btn btn-brand w-100">
+                        <i class="bi bi-award-fill" aria-hidden="true"></i>Souscrire « Année soldée »
+                    </button>
+                </form>
+            </section>
+        {% else %}
+            <section class="pass-card mb-4" aria-label="Forfait Année soldée actif">
+                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                    <span class="eyebrow text-white-50">Couverture active</span>
+                    <span class="badge-annual-pass">
+                        <i class="bi bi-award-fill" aria-hidden="true"></i>Année soldée
+                    </span>
+                </div>
+                <h2 class="pass-title h4">Forfait « Année soldée » actif</h2>
+                <p class="small text-white-50 mb-2">
+                    Période : <strong class="text-white">{{ active_pass.valid_from|date:"d/m/Y" }} → {{ active_pass.valid_until|date:"d/m/Y" }}</strong>
+                </p>
+                {% if active_pass.payment %}
+                    <p class="small text-white-50 mb-0">
+                        Paiement d'origine : {{ active_pass.payment.reference }} ({{ active_pass.payment.amount|fcfa }}, {{ active_pass.payment.get_method_display }}).
+                    </p>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        <section class="surface p-3 p-md-4" aria-labelledby="child-debit-title">
+            <div class="eyebrow mb-1">Clôture 18h00</div>
+            <h2 class="h6 fw-bold mb-3" id="child-debit-title">Réglages de débit à la veille</h2>
+
+            {% if not active_pass %}
+                <div class="surface-flat p-3 mb-3 small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="muted">Débits programmés</span>
+                        <strong class="tabular">{{ scheduled_total|fcfa }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="muted">Solde prévisionnel</span>
+                        <strong class="tabular {% if projected_balance < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ projected_balance|fcfa }}
+                        </strong>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'parents:child_debit_settings' child.pk %}" class="mb-2">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" for="id_child_debit_freq">Fréquence de débit</label>
+                    <select name="debit_frequency" id="id_child_debit_freq" class="form-select">
+                        {% for code, label in wallet.DebitFrequency.choices %}
+                            <option value="{{ code }}" {% if wallet.debit_frequency == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <label class="vsc-check-pill mb-3" for="p-auto-debit">
+                    <input type="checkbox" name="auto_debit_enabled" id="p-auto-debit" {% if wallet.auto_debit_enabled %}checked{% endif %}>
+                    <span class="vsc-check-box" aria-hidden="true"></span>
+                    <span>Débit automatique activé</span>
+                </label>
+
+                <button type="submit" class="btn btn-soft w-100">Enregistrer les réglages</button>
+            </form>
+
+            {% if scheduled_total > 0 %}
+                <form method="post" action="{% url 'parents:child_pay_now' child.pk %}" class="mt-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-brand w-100">
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>Régler les repas programmés ({{ scheduled_total|fcfa }})
+                    </button>
+                </form>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="col-12 col-lg-7">
+        <section class="surface p-3 p-md-4 mb-4" aria-labelledby="child-res-title">
+            <div class="eyebrow mb-1">Suivi des repas</div>
+            <h2 class="h5 mb-3" id="child-res-title">Réservations récentes</h2>
+
+            {% if reservations %}
+                <div>
+                    {% for res in reservations %}
+                        <div class="list-row">
+                            <span class="list-icon {% if res.status == 'SERVED' %}ok{% elif res.status == 'CANCELLED' %}out{% endif %}">
+                                <i class="bi {% if res.fulfillment == 'DELIVERY' %}bi-truck{% else %}bi-calendar2-check{% endif %}" aria-hidden="true"></i>
+                            </span>
+                            <div class="list-main">
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <p class="list-title text-capitalize">{{ res.service.date|date:"l j F" }}</p>
+                                    <span class="badge-status {% if res.status == 'SERVED' %}status-ok{% elif res.status == 'CANCELLED' %}status-danger{% elif res.status == 'DECLINED' %}status-off{% else %}status-warn{% endif %}">
+                                        {{ res.status_display_label }}
+                                    </span>
+                                    {% if res.fulfillment == "DELIVERY" %}
+                                        <span class="badge-delivery"><i class="bi bi-truck" aria-hidden="true"></i>Livraison</span>
+                                    {% endif %}
+                                </div>
+                                <p class="list-sub">
+                                    {% for item in res.items.all %}{{ item.option.dish.name }}{% if not forloop.last %} · {% endif %}{% empty %}Aucun plat sélectionné{% endfor %}
+                                </p>
+                            </div>
+                            <span class="{% if res.payment_status == 'SCHEDULED' %}badge-scheduled{% elif res.payment_status == 'SETTLED' %}chip chip-ok{% elif res.payment_status == 'TO_PAY_AT_PICKUP' %}chip chip-gold{% else %}chip{% endif %}">
+                                {{ res.get_payment_status_display }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-calendar2-x" aria-hidden="true"></i>
+                    <strong>Aucune réservation</strong>
+                    <p class="small mb-0">Les réservations de {{ child.first_name }} s'afficheront ici.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="surface p-3 p-md-4 mb-4" aria-labelledby="child-hist-title">
+            <div class="eyebrow mb-1">3 opérations typées &amp; portefeuille</div>
+            <h2 class="h5 mb-3" id="child-hist-title">Historique financier</h2>
+
+            <h3 class="eyebrow mb-2">Opérations d'encaissement</h3>
+            {% if payments %}
+                <div class="mb-4">
+                    {% for pay in payments %}
+                        <div class="list-row">
+                            {% if pay.kind == "TOPUP" %}
+                                <span class="list-icon op-topup-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
+                            {% elif pay.kind == "ANNUAL_PREPAYMENT" %}
+                                <span class="list-icon op-annual-icon"><i class="bi bi-award-fill" aria-hidden="true"></i></span>
+                            {% else %}
+                                <span class="list-icon op-pickup-icon"><i class="bi bi-phone-vibrate" aria-hidden="true"></i></span>
+                            {% endif %}
+                            <div class="list-main">
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    {% if pay.kind == "TOPUP" %}
+                                        <span class="op-badge op-topup">{{ pay.get_kind_display }}</span>
+                                    {% elif pay.kind == "ANNUAL_PREPAYMENT" %}
+                                        <span class="op-badge op-annual">{{ pay.get_kind_display }}</span>
+                                    {% else %}
+                                        <span class="op-badge op-pickup">{{ pay.get_kind_display }}</span>
+                                    {% endif %}
+                                    <span class="small fw-semibold">{{ pay.get_method_display }}</span>
+                                </div>
+                                <p class="list-sub tabular">{{ pay.created_at|date:"d/m/Y H:i" }} · Réf. {{ pay.reference }} · {{ pay.get_status_display }}</p>
+                            </div>
+                            <span class="list-amount {% if pay.status == 'CONFIRMED' %}in{% endif %}">{{ pay.amount|fcfa }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="small muted mb-4">Aucun paiement enregistré pour le moment.</p>
+            {% endif %}
+
+            <h3 class="eyebrow mb-2 pt-3 border-top">Mouvements du portefeuille</h3>
+            {% if wallet_txs %}
+                <div>
+                    {% for tx in wallet_txs %}
+                        <div class="list-row">
+                            {% if tx.kind == "TOPUP_CREDIT" %}
+                                <span class="list-icon op-topup-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
+                            {% elif tx.kind == "CONSUMPTION" %}
+                                <span class="list-icon out"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span>
+                            {% elif tx.kind == "REFUND" %}
+                                <span class="list-icon ok"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></span>
+                            {% else %}
+                                <span class="list-icon"><i class="bi bi-sliders" aria-hidden="true"></i></span>
+                            {% endif %}
+                            <div class="list-main">
+                                <p class="list-title">{{ tx.get_kind_display }}{% if tx.reason %} — {{ tx.reason }}{% endif %}</p>
+                                <p class="list-sub tabular">{{ tx.created_at|date:"d/m/Y H:i" }} · Solde après : {{ tx.balance_after|fcfa }}</p>
+                            </div>
+                            <span class="list-amount {% if tx.direction == '+' %}in{% endif %}">{{ tx.direction }}{{ tx.amount|fcfa }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="small muted mb-0">Aucun mouvement de portefeuille.</p>
+            {% endif %}
+        </section>
+
+        <section class="surface p-3 p-md-4" aria-labelledby="child-diet-title">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <div class="eyebrow">Santé &amp; vigilance</div>
+                    <h2 class="h5 mb-0" id="child-diet-title">
+                        <i class="bi bi-heart-pulse text-danger me-1" aria-hidden="true"></i>Profil alimentaire de {{ child.first_name }}
+                    </h2>
+                </div>
+                <span class="chip"><i class="bi bi-lock" aria-hidden="true"></i>Privé</span>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="dietary">
+
+                <div class="mb-4">
+                    <div class="mb-2">
+                        <span class="chip chip-allergen">
+                            <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>{{ dietary_form.allergies.label }}
+                        </span>
+                    </div>
+                    <div class="row row-cols-2 row-cols-md-3 g-2">
+                        {% for cb in dietary_form.allergies %}
+                            <div class="col">
+                                <label class="vsc-check-pill is-danger" for="{{ cb.id_for_label }}">
+                                    {{ cb.tag }}
+                                    <span class="vsc-check-box" aria-hidden="true"></span>
+                                    <span>{{ cb.choice_label }}</span>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="mb-2">
+                        <span class="chip chip-gold">
+                            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>{{ dietary_form.intolerances.label }}
+                        </span>
+                    </div>
+                    <div class="row row-cols-2 row-cols-md-3 g-2">
+                        {% for cb in dietary_form.intolerances %}
+                            <div class="col">
+                                <label class="vsc-check-pill is-warn" for="{{ cb.id_for_label }}">
+                                    {{ cb.tag }}
+                                    <span class="vsc-check-box" aria-hidden="true"></span>
+                                    <span>{{ cb.choice_label }}</span>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="mb-2">
+                        <span class="chip chip-regime">
+                            <i class="bi bi-info-circle" aria-hidden="true"></i>{{ dietary_form.regimes.label }}
+                        </span>
+                    </div>
+                    <div class="row row-cols-2 row-cols-md-3 g-2">
+                        {% for cb in dietary_form.regimes %}
+                            <div class="col">
+                                <label class="vsc-check-pill" for="{{ cb.id_for_label }}">
+                                    {{ cb.tag }}
+                                    <span class="vsc-check-box" aria-hidden="true"></span>
+                                    <span>{{ cb.choice_label }}</span>
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ dietary_form.preferences.id_for_label }}">{{ dietary_form.preferences.label }}</label>
+                    {{ dietary_form.preferences }}
+                    {% if dietary_form.preferences.errors %}
+                        <div class="text-danger small mt-1">{{ dietary_form.preferences.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="{{ dietary_form.notes.id_for_label }}">{{ dietary_form.notes.label }}</label>
+                    {{ dietary_form.notes }}
+                    {% if dietary_form.notes.errors %}
+                        <div class="text-danger small mt-1">{{ dietary_form.notes.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 w-md-auto">
+                    <i class="bi bi-check2-circle" aria-hidden="true"></i>Enregistrer le profil alimentaire
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
