@@ -1,0 +1,151 @@
+/* ============================================================
+   Vatel Smart Canteen V2.2 — Charte Graphique Officielle Vatel
+   Source unique : logo-vatel.svg (#87C1E9 · #1D1D1B · #FFFFFF)
+   Zéro bronze, zéro couleur hors charte Vatel.
+   Contrastes vérifiés WCAG AA / AAA :
+     - Noir Vatel #1D1D1B sur Blanc #FFFFFF : 16.8:1 (AAA)
+     - Noir Vatel #1D1D1B sur Bleu Ciel Vatel #87C1E9 : 8.9:1 (AAA)
+     - Blanc #FFFFFF sur Bleu Vatel #1B6B9E : 5.8:1 (AA)
+     - Blanc #FFFFFF sur Bleu Vatel Foncé #134668 : 9.4:1 (AAA)
+   ============================================================ */
+
+:root,
+[data-theme="signature"],
+[data-theme="fraiche"],
+[data-theme="marche"] {
+  color-scheme: light;
+
+  /* Typographies locales Vatel */
+  --font-display: "Fraunces", "Playfair Display", Georgia, serif;
+  --font-body: "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-label: "Raleway", "Work Sans", system-ui, sans-serif;
+  --font-mono: "Work Sans", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Échelle typographique stricte : 32 / 24 / 20 / 16 / 14 px */
+  --fs-32: 2rem;       /* 32 px */
+  --fs-24: 1.5rem;     /* 24 px */
+  --fs-20: 1.25rem;    /* 20 px */
+  --fs-16: 1rem;       /* 16 px */
+  --fs-14: 0.875rem;   /* 14 px */
+
+  /* Palette officielle Vatel (logo-vatel.svg) */
+  --ink: #1D1D1B;              /* Noir officiel logo-vatel.svg */
+  --ink-2: #2A2F35;
+  --muted: #4A5A68;            /* Gris-bleu ardoise AA (6.9:1 sur blanc) */
+
+  --sky: #87C1E9;              /* Bleu ciel officiel logo-vatel.svg */
+  --vatel-blue: #1B6B9E;       /* Même teinte 204° que #87C1E9, calibrée AA sur blanc */
+  --vatel-blue-dark: #134668;  /* Bleu nuit Vatel AAA */
+  --vatel-blue-soft: #DCECF8;  /* Fond bleu ciel très doux */
+
+  /* Alias internes pointant tous strictement sur la charte Vatel */
+  --lagoon: var(--vatel-blue);
+  --lagoon-bright: var(--sky);
+  --lagoon-dark: var(--vatel-blue-dark);
+  --lagoon-soft: var(--vatel-blue-soft);
+  --lagoon-grad: linear-gradient(135deg, #134668 0%, #1B6B9E 55%, #3B8EC2 100%);
+
+  --chili: var(--vatel-blue);
+  --chili-hover: var(--vatel-blue-dark);
+  --chili-soft: var(--vatel-blue-soft);
+  --chili-dark-grad: linear-gradient(135deg, #0F3550 0%, #134668 55%, #1B6B9E 100%);
+
+  --mango: var(--sky);
+  --mango-hover: #6FB3E2;
+  --mango-soft: var(--vatel-blue-soft);
+  --mango-ink: #1D1D1B;
+  --mango-grad: linear-gradient(135deg, #6FB3E2 0%, #87C1E9 55%, #B5DAF3 100%);
+
+  --anthracite: #1D1D1B;
+  --anthracite-soft: #E5ECF2;
+  --anthracite-grad: linear-gradient(135deg, #141618 0%, #1D1D1B 58%, #2E343B 100%);
+
+  --primary: var(--vatel-blue);
+  --primary-vatel: var(--sky);
+  --primary-hover: var(--vatel-blue-dark);
+  --primary-ink: #FFFFFF;
+  --primary-soft: var(--vatel-blue-soft);
+  --accent: var(--sky);
+  --accent-soft: var(--vatel-blue-soft);
+  --accent-ink: #1D1D1B;
+  --accent-soft-ink: var(--vatel-blue-dark);
+  --gold: var(--sky);
+
+  /* Surfaces & Fonds Vatel */
+  --bg: #EDF5FB;
+  --paper: #F7FBFE;
+  --surface: #FFFFFF;
+  --surface-2: #E3F0FA;
+
+  /* Bordures */
+  --line: rgba(29, 29, 27, 0.10);
+  --line-strong: rgba(135, 193, 233, 0.60);
+
+  /* Statuts sémantiques AA (uniquement pour les états / alertes) */
+  --success: #157347;
+  --success-soft: #E0F3EB;
+  --danger: #B42318;
+  --danger-soft: #FEE4E2;
+  --warning: #8F4F06;
+  --warning-soft: #FEF0C7;
+
+  /* Les 3 opérations financières en charte Vatel :
+     - Recharge (TOPUP) = Bleu Vatel (#1B6B9E / #DCECF8)
+     - Prépaiement annuel (ANNUAL_PREPAYMENT) = Bleu Ciel Logo Vatel (#87C1E9, texte #1D1D1B)
+     - Paiement au retrait (PICKUP) = Noir Anthracite Vatel (#1D1D1B, texte #FFFFFF) */
+  --annual-bg: #87C1E9;
+  --annual-ink: #1D1D1B;
+  --annual-border: rgba(29, 29, 27, 0.20);
+  --delivery-bg: #DCECF8;
+  --delivery-ink: #134668;
+  --delivery-border: rgba(135, 193, 233, 0.75);
+
+  /* Rythme, rayons, ombres */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --shadow-1: 0 2px 6px rgba(29, 29, 27, 0.05), 0 4px 14px rgba(27, 107, 158, 0.06);
+  --shadow-2: 0 10px 26px rgba(29, 29, 27, 0.08), 0 2px 6px rgba(27, 107, 158, 0.06);
+  --shadow-3: 0 24px 56px rgba(29, 29, 27, 0.16), 0 4px 14px rgba(27, 107, 158, 0.08);
+
+  /* Anneau de focus clavier Bleu Vatel */
+  --ring: 0 0 0 3px var(--vatel-blue-soft), 0 0 0 5px var(--vatel-blue);
+  --ease: cubic-bezier(0.2, 0.7, 0.25, 1);
+  --hero-grad: radial-gradient(120% 120% at 15% 0%, #FFFFFF 0%, #F4F9FD 48%, #E1F0FB 100%);
+
+  /* Surcharges Bootstrap 5.3 */
+  --bs-primary: #1B6B9E;
+  --bs-primary-rgb: 27, 107, 158;
+  --bs-dark: #1D1D1B;
+  --bs-dark-rgb: 29, 29, 27;
+  --bs-secondary: #4A5A68;
+  --bs-secondary-rgb: 74, 90, 104;
+  --bs-success: #157347;
+  --bs-success-rgb: 21, 115, 71;
+  --bs-danger: #B42318;
+  --bs-danger-rgb: 180, 35, 24;
+  --bs-warning: #8F4F06;
+  --bs-warning-rgb: 143, 79, 6;
+  --bs-body-bg: #EDF5FB;
+  --bs-body-color: #1D1D1B;
+  --bs-body-font-family: var(--font-body);
+  --bs-body-font-size: 1rem;
+  --bs-body-line-height: 1.55;
+  --bs-link-color: #1B6B9E;
+  --bs-link-hover-color: #134668;
+  --bs-border-color: rgba(29, 29, 27, 0.10);
+  --bs-border-radius: 1rem;
+  --bs-focus-ring-color: rgba(135, 193, 233, 0.45);
+}

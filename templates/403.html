@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Accès refusé — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="vsc-narrow py-4">
+    <div class="surface p-4 p-md-5 text-center">
+        <img src="{% static 'img/logo-vatel.svg' %}" alt="Logo Vatel" class="brand-logo mx-auto mb-3">
+        <div class="eyebrow text-danger mb-2">Erreur 403</div>
+        <h1 class="display-md mb-2">Accès non autorisé</h1>
+        <p class="muted mb-4">
+            Vous ne disposez pas des droits nécessaires pour consulter cette page.
+        </p>
+        <a href="{% url 'core:home' %}" class="btn btn-brand">
+            <i class="bi bi-house" aria-hidden="true"></i>Retour à l'accueil
+        </a>
+    </div>
+</div>
+{% endblock %}

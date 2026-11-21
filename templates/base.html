@@ -1,0 +1,319 @@
+{% load static %}<!DOCTYPE html>
+<html lang="fr" data-theme="signature">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#1D1D1B">
+    <meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
+    <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
+    <title>{% block title %}Vatel Smart Canteen{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <div id="vsc-top-loader" class="vsc-top-loader" role="progressbar" aria-label="Chargement en cours" aria-hidden="true"></div>
+    <div class="app-bg" aria-hidden="true"></div>
+    <a class="skip-link" href="#contenu">Aller au contenu</a>
+
+    {% with rm=request.resolver_match %}
+    {% if user.is_authenticated and user.role == "EQUIPE" or user.is_authenticated and user.role == "ADMIN" %}
+        <div class="admin-shell">
+            <aside class="admin-sidebar d-none d-lg-flex" aria-label="Menu latéral">
+                <a class="brand" href="{% if user.role == 'ADMIN' %}{% url 'dashboard:home' %}{% else %}{% url 'canteen:kitchen' %}{% endif %}">
+                    <img class="brand-logo" src="{% static 'img/logo-vatel.svg' %}" alt="Logo Vatel">
+                    <span>
+                        <span class="brand-name">Vatel Smart Canteen</span>
+                        <span class="brand-sub">{% if user.role == "ADMIN" %}Administration{% else %}Équipe cantine{% endif %}</span>
+                    </span>
+                </a>
+
+                <nav class="admin-nav" aria-label="Navigation principale">
+                    {% if user.role == "ADMIN" %}
+                        <div class="admin-nav-label">Pilotage &amp; Finances</div>
+                        <a href="{% url 'dashboard:home' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'home' %}is-active{% endif %}">
+                            <i class="bi bi-speedometer2" aria-hidden="true"></i><span>Tableau de bord</span>
+                        </a>
+                        <a href="{% url 'dashboard:closure' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'closure' %}is-active{% endif %}">
+                            <i class="bi bi-clock-history" aria-hidden="true"></i><span>Clôture 18h</span>
+                        </a>
+                        <a href="{% url 'menus:admin_service_list' %}" class="{% if rm.app_name == 'menus' and rm.url_name != 'week_menu' %}is-active{% endif %}">
+                            <i class="bi bi-journal-text" aria-hidden="true"></i><span>Menus &amp; Tarifs</span>
+                        </a>
+                        <a href="{% url 'dashboard:orders' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'orders' %}is-active{% endif %}">
+                            <i class="bi bi-list-check" aria-hidden="true"></i><span>Commandes</span>
+                        </a>
+                    {% endif %}
+
+                    <div class="admin-nav-label">Opérations Cantine</div>
+                    <a href="{% url 'canteen:kitchen' %}" class="{% if rm.app_name == 'canteen' and rm.url_name == 'kitchen' %}is-active{% endif %}">
+                        <i class="bi bi-fire" aria-hidden="true"></i><span>Cuisine</span>
+                    </a>
+                    <a href="{% url 'canteen:counter' %}" class="{% if rm.app_name == 'canteen' and rm.url_name == 'counter' or rm.app_name == 'canteen' and rm.url_name == 'validate_qr' %}is-active{% endif %}">
+                        <i class="bi bi-qr-code-scan" aria-hidden="true"></i><span>Comptoir QR</span>
+                    </a>
+                    <a href="{% url 'canteen:deliveries' %}" class="{% if rm.app_name == 'canteen' and rm.url_name == 'deliveries' %}is-active{% endif %}">
+                        <i class="bi bi-truck" aria-hidden="true"></i><span>Livraisons</span>
+                    </a>
+
+                    {% if user.role == "ADMIN" %}
+                        <div class="admin-nav-label">Gouvernance</div>
+                        <a href="{% url 'dashboard:passes' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'passes' %}is-active{% endif %}">
+                            <i class="bi bi-award" aria-hidden="true"></i><span>Forfaits &amp; Virements</span>
+                        </a>
+                        <a href="{% url 'dashboard:users' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'users' %}is-active{% endif %}">
+                            <i class="bi bi-people" aria-hidden="true"></i><span>Utilisateurs</span>
+                        </a>
+                        <a href="{% url 'dashboard:audit' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'audit' %}is-active{% endif %}">
+                            <i class="bi bi-shield-check" aria-hidden="true"></i><span>Journal d'audit</span>
+                        </a>
+                    {% else %}
+                        <div class="admin-nav-label">Menu &amp; Alertes</div>
+                        <a href="{% url 'menus:week_menu' %}" class="{% if rm.app_name == 'menus' and rm.url_name == 'week_menu' %}is-active{% endif %}">
+                            <i class="bi bi-calendar-week" aria-hidden="true"></i><span>Menu public</span>
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'core:notifications' %}" class="{% if rm.app_name == 'core' and rm.url_name == 'notifications' %}is-active{% endif %}">
+                        <i class="bi bi-bell" aria-hidden="true"></i><span>Notifications</span>
+                    </a>
+                </nav>
+
+                <div class="sidebar-foot">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="brand-mark">{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}</span>
+                        <div class="min-w-0">
+                            <div class="text-white fw-semibold text-truncate">{{ user.full_name }}</div>
+                            <div class="small text-white-50">{{ user.get_role_display }}</div>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-soft btn-sm">
+                            <i class="bi bi-person-circle" aria-hidden="true"></i>Mon profil
+                        </a>
+                        <form method="post" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-accent btn-sm w-100">
+                                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Déconnexion
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="admin-main-col">
+                <header class="admin-mobile-bar d-lg-none">
+                    <a class="brand" href="{% if user.role == 'ADMIN' %}{% url 'dashboard:home' %}{% else %}{% url 'canteen:kitchen' %}{% endif %}">
+                        <img class="brand-logo" src="{% static 'img/logo-vatel.svg' %}" alt="Logo Vatel">
+                        <span>
+                            <span class="brand-name">Vatel Smart Canteen</span>
+                            <span class="brand-sub">{% if user.role == "ADMIN" %}Administration{% else %}Équipe cantine{% endif %}</span>
+                        </span>
+                    </a>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{% url 'core:notifications' %}" class="btn btn-ghost btn-icon text-white" aria-label="Notifications">
+                            <i class="bi bi-bell" aria-hidden="true"></i>
+                        </a>
+                        <button class="btn btn-accent btn-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminDrawer" aria-controls="adminDrawer" aria-label="Ouvrir le menu">
+                            <i class="bi bi-list fs-4" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <div class="offcanvas offcanvas-start admin-offcanvas d-lg-none" tabindex="-1" id="adminDrawer" aria-labelledby="adminDrawerLabel">
+                    <div class="offcanvas-header border-bottom border-secondary">
+                        <div class="brand" id="adminDrawerLabel">
+                            <img class="brand-logo" src="{% static 'img/logo-vatel.svg' %}" alt="Logo Vatel">
+                            <span>
+                                <span class="brand-name">Vatel Smart Canteen</span>
+                                <span class="brand-sub">{{ user.get_role_display }}</span>
+                            </span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+                    </div>
+                    <div class="offcanvas-body d-flex flex-column">
+                        <nav class="admin-nav" aria-label="Navigation mobile">
+                            {% if user.role == "ADMIN" %}
+                                <div class="admin-nav-label">Pilotage &amp; Finances</div>
+                                <a href="{% url 'dashboard:home' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'home' %}is-active{% endif %}"><i class="bi bi-speedometer2" aria-hidden="true"></i><span>Tableau de bord</span></a>
+                                <a href="{% url 'dashboard:closure' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'closure' %}is-active{% endif %}"><i class="bi bi-clock-history" aria-hidden="true"></i><span>Clôture 18h</span></a>
+                                <a href="{% url 'menus:admin_service_list' %}" class="{% if rm.app_name == 'menus' and rm.url_name != 'week_menu' %}is-active{% endif %}"><i class="bi bi-journal-text" aria-hidden="true"></i><span>Menus &amp; Tarifs</span></a>
+                                <a href="{% url 'dashboard:orders' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'orders' %}is-active{% endif %}"><i class="bi bi-list-check" aria-hidden="true"></i><span>Commandes</span></a>
+                            {% endif %}
+                            <div class="admin-nav-label">Opérations Cantine</div>
+                            <a href="{% url 'canteen:kitchen' %}" class="{% if rm.app_name == 'canteen' and rm.url_name == 'kitchen' %}is-active{% endif %}"><i class="bi bi-fire" aria-hidden="true"></i><span>Cuisine</span></a>
+                            <a href="{% url 'canteen:counter' %}" class="{% if rm.app_name == 'canteen' and rm.url_name == 'counter' or rm.app_name == 'canteen' and rm.url_name == 'validate_qr' %}is-active{% endif %}"><i class="bi bi-qr-code-scan" aria-hidden="true"></i><span>Comptoir QR</span></a>
+                            <a href="{% url 'canteen:deliveries' %}" class="{% if rm.app_name == 'canteen' and rm.url_name == 'deliveries' %}is-active{% endif %}"><i class="bi bi-truck" aria-hidden="true"></i><span>Livraisons</span></a>
+                            {% if user.role == "ADMIN" %}
+                                <div class="admin-nav-label">Gouvernance</div>
+                                <a href="{% url 'dashboard:passes' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'passes' %}is-active{% endif %}"><i class="bi bi-award" aria-hidden="true"></i><span>Forfaits &amp; Virements</span></a>
+                                <a href="{% url 'dashboard:users' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'users' %}is-active{% endif %}"><i class="bi bi-people" aria-hidden="true"></i><span>Utilisateurs</span></a>
+                                <a href="{% url 'dashboard:audit' %}" class="{% if rm.app_name == 'dashboard' and rm.url_name == 'audit' %}is-active{% endif %}"><i class="bi bi-shield-check" aria-hidden="true"></i><span>Journal d'audit</span></a>
+                            {% endif %}
+                            <div class="admin-nav-label">Compte</div>
+                            <a href="{% url 'core:notifications' %}" class="{% if rm.app_name == 'core' and rm.url_name == 'notifications' %}is-active{% endif %}"><i class="bi bi-bell" aria-hidden="true"></i><span>Notifications</span></a>
+                            <a href="{% url 'accounts:profile' %}" class="{% if rm.app_name == 'accounts' and rm.url_name == 'profile' %}is-active{% endif %}"><i class="bi bi-person-circle" aria-hidden="true"></i><span>Mon profil</span></a>
+                        </nav>
+                        <div class="mt-auto pt-3 border-top border-secondary">
+                            <form method="post" action="{% url 'accounts:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-accent btn-sm w-100">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i>Déconnexion
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <main class="admin-content" id="contenu">
+    {% else %}
+        <div class="app-shell">
+            <header class="app-header">
+                <div class="app-header-inner">
+                    <a class="brand" href="{% url 'core:home' %}">
+                        <img class="brand-logo" src="{% static 'img/logo-vatel.svg' %}" alt="Logo Vatel">
+                        <span class="min-w-0">
+                            <span class="brand-name text-truncate">Vatel Smart Canteen</span>
+                            <span class="brand-sub">{% if user.is_authenticated and user.role == "PARENT" %}Espace Parent{% else %}Abidjan · Cocody{% endif %}</span>
+                        </span>
+                    </a>
+
+                    <nav class="app-desktop-nav d-none d-lg-flex" aria-label="Navigation principale">
+                        <a href="{% url 'menus:week_menu' %}" class="{% if rm.app_name == 'menus' %}is-active{% endif %}">
+                            <i class="bi bi-journal-text" aria-hidden="true"></i>Menu
+                        </a>
+                        {% if user.is_authenticated %}
+                            {% if user.is_diner %}
+                                <a href="{% url 'reservations:list' %}" class="{% if rm.app_name == 'reservations' %}is-active{% endif %}">
+                                    <i class="bi bi-calendar2-check" aria-hidden="true"></i>Réservations
+                                </a>
+                                <a href="{% url 'wallet:home' %}" class="{% if rm.app_name == 'wallet' %}is-active{% endif %}">
+                                    <i class="bi bi-wallet2" aria-hidden="true"></i>Portefeuille
+                                </a>
+                            {% elif user.role == "PARENT" %}
+                                <a href="{% url 'parents:home' %}" class="{% if rm.app_name == 'parents' %}is-active{% endif %}">
+                                    <i class="bi bi-people-fill" aria-hidden="true"></i>Mes enfants
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </nav>
+
+                    <div class="d-flex align-items-center gap-2 gap-xl-3 flex-shrink-0">
+                        {% if user.is_authenticated %}
+                            {% if user.is_diner %}
+                                <a href="{% url 'wallet:home' %}" class="vs-call-widget d-none d-xl-inline-flex" aria-label="Mon Portefeuille">
+                                    <span class="vs-call-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
+                                    <span>
+                                        <span class="vs-call-label">Paiement 100 % via l'appli</span>
+                                        <span class="vs-call-number">{% if active_pass %}Année soldée{% else %}Mon Portefeuille{% endif %}</span>
+                                    </span>
+                                </a>
+                            {% elif user.role == "PARENT" %}
+                                <a href="{% url 'parents:home' %}" class="vs-call-widget d-none d-xl-inline-flex" aria-label="Espace Parent">
+                                    <span class="vs-call-icon"><i class="bi bi-people-fill" aria-hidden="true"></i></span>
+                                    <span>
+                                        <span class="vs-call-label">Suivi &amp; Recharges in-app</span>
+                                        <span class="vs-call-number">Espace Parent</span>
+                                    </span>
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'core:notifications' %}" class="vs-circle-btn" aria-label="Notifications">
+                                <i class="bi bi-bell" aria-hidden="true"></i>
+                            </a>
+                            <a href="{% url 'accounts:profile' %}" class="vs-circle-btn" aria-label="Mon profil">
+                                <span class="fw-bold small">{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}</span>
+                            </a>
+                            <form method="post" action="{% url 'accounts:logout' %}" class="d-none d-lg-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-soft btn-sm">Déconnexion</button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'menus:week_menu' %}" class="vs-call-widget d-none d-xl-inline-flex">
+                                <span class="vs-call-icon"><i class="bi bi-telephone-outbound" aria-hidden="true"></i></span>
+                                <span>
+                                    <span class="vs-call-label">Réservation veille avant 18h</span>
+                                    <span class="vs-call-number">Vatel Smart Canteen</span>
+                                </span>
+                            </a>
+                            <a href="{% url 'accounts:login' %}" class="btn btn-soft btn-sm">Connexion</a>
+                            <a href="{% url 'accounts:register' %}" class="btn btn-brand btn-sm d-none d-sm-inline-flex">Inscription</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+            <main class="app-main {% block main_class %}{% endblock %}" id="contenu">
+    {% endif %}
+
+                    {% if messages %}
+                        <div class="mb-3" aria-live="polite">
+                            {% for message in messages %}
+                                <div class="alert-soft alert-dismissible fade show mb-2 {% if 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% elif 'success' in message.tags %}alert-success{% else %}alert-info{% endif %}" role="alert">
+                                    <i class="bi {% if 'error' in message.tags %}bi-exclamation-octagon-fill{% elif 'warning' in message.tags %}bi-exclamation-triangle-fill{% elif 'success' in message.tags %}bi-check-circle-fill{% else %}bi-info-circle-fill{% endif %}" aria-hidden="true"></i>
+                                    <div class="flex-grow-1">{{ message }}</div>
+                                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% block content %}{% endblock %}
+
+    {% if user.is_authenticated and user.role == "EQUIPE" or user.is_authenticated and user.role == "ADMIN" %}
+                </main>
+            </div>
+        </div>
+    {% else %}
+            </main>
+
+            {% block bottom_nav %}
+            {% if user.is_authenticated and user.is_diner %}
+                <nav class="bottom-nav vsc-bottom-nav d-lg-none" aria-label="Navigation mobile">
+                    <a href="{% url 'menus:week_menu' %}" class="{% if rm.app_name == 'menus' %}is-active{% endif %}">
+                        <i class="bi bi-journal-text" aria-hidden="true"></i><span>Menu</span>
+                    </a>
+                    <a href="{% url 'reservations:list' %}" class="{% if rm.app_name == 'reservations' %}is-active{% endif %}">
+                        <i class="bi bi-calendar2-check" aria-hidden="true"></i><span>Réservations</span>
+                    </a>
+                    <a href="{% url 'wallet:home' %}" class="{% if rm.app_name == 'wallet' %}is-active{% endif %}">
+                        <i class="bi bi-wallet2" aria-hidden="true"></i><span>Solde</span>
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="{% if rm.app_name == 'accounts' %}is-active{% endif %}">
+                        <i class="bi bi-person-badge" aria-hidden="true"></i><span>Profil</span>
+                    </a>
+                </nav>
+            {% elif user.is_authenticated and user.role == "PARENT" %}
+                <nav class="bottom-nav vsc-bottom-nav d-lg-none" aria-label="Navigation parent mobile">
+                    <a href="{% url 'parents:home' %}" class="{% if rm.app_name == 'parents' %}is-active{% endif %}">
+                        <i class="bi bi-people-fill" aria-hidden="true"></i><span>Enfants</span>
+                    </a>
+                    <a href="{% url 'parents:home' %}#solde" class="">
+                        <i class="bi bi-wallet2" aria-hidden="true"></i><span>Solde</span>
+                    </a>
+                    <a href="{% url 'core:notifications' %}" class="{% if rm.app_name == 'core' and rm.url_name == 'notifications' %}is-active{% endif %}">
+                        <i class="bi bi-bell" aria-hidden="true"></i><span>Alertes</span>
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="{% if rm.app_name == 'accounts' %}is-active{% endif %}">
+                        <i class="bi bi-person-badge" aria-hidden="true"></i><span>Profil</span>
+                    </a>
+                </nav>
+            {% endif %}
+            {% endblock %}
+
+            <footer class="app-footer d-none d-lg-block">
+                <div class="container text-center">
+                    Vatel Smart Canteen — Réserver, préparer juste, servir vite, payer simplement.
+                </div>
+            </footer>
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <script src="{% static 'vendor/bootstrap.bundle.min.js' %}" defer></script>
+    <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+    <script src="{% static 'js/app.js' %}" defer></script>
+    <script src="{% static 'js/pwa.js' %}" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

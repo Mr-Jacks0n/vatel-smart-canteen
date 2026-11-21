@@ -1,0 +1,3473 @@
+/* ============================================================
+   Vatel Smart Canteen — Stylesheet principal
+   Architecture : Django Templates + Bootstrap 5.3 + HTMX
+   ============================================================ */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- Typographie ---------- */
+h1, h2, h3, h4, .display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.14;
+}
+
+.display-xl {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.6vw, 3.35rem);
+  font-weight: 600;
+  line-height: 1.08;
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 3vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.18;
+}
+
+.eyebrow {
+  font-family: var(--font-label);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-xs);
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+
+/* ---------- HTMX sans style inline (CSP 'self') ---------- */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
+/* ---------- Lien d'évitement & décor de fond ---------- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 1080;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-xs);
+}
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--hero-grad);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.app-bg::before,
+.app-bg::after {
+  content: "";
+  position: absolute;
+  width: 46vmax;
+  height: 46vmax;
+  border-radius: 50%;
+  filter: blur(44px);
+  opacity: 0.45;
+}
+
+.app-bg::before {
+  background: radial-gradient(circle at 30% 30%, var(--sky), transparent 62%);
+  top: -18vmax;
+  left: -12vmax;
+}
+
+.app-bg::after {
+  background: radial-gradient(circle at 60% 40%, var(--surface-2), transparent 62%);
+  bottom: -22vmax;
+  right: -14vmax;
+}
+
+/* ---------- Marque Vatel ---------- */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--ink);
+  min-height: 44px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  padding: 2px;
+  flex: 0 0 44px;
+  box-shadow: var(--shadow-1);
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  flex: 0 0 auto;
+}
+
+.brand-mark.is-pass {
+  background: var(--annual-bg);
+  color: var(--annual-ink);
+  border-color: var(--annual-border);
+}
+
+.brand-name {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+.brand-sub {
+  display: block;
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ---------- Boutons & cibles tactiles >= 44px ---------- */
+.btn,
+.btn-sm,
+.btn-lg {
+  --bs-btn-border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease), background-color 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+
+.btn {
+  padding: 0.65rem 1.2rem;
+}
+
+.btn-sm {
+  padding: 0.5rem 0.95rem;
+  font-size: 0.875rem;
+}
+
+.btn-lg {
+  min-height: 52px;
+  padding: 0.85rem 1.5rem;
+  font-size: 1.02rem;
+}
+
+.btn-icon {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-brand {
+  background-color: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: var(--shadow-1);
+}
+
+.btn-brand:hover,
+.btn-brand:focus-visible {
+  background-color: var(--ink-2);
+  color: var(--paper);
+  border-color: var(--ink-2);
+  box-shadow: var(--shadow-2);
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--primary);
+  --bs-btn-border-color: var(--primary);
+  --bs-btn-hover-bg: var(--primary-hover);
+  --bs-btn-hover-border-color: var(--primary-hover);
+  --bs-btn-active-bg: var(--primary-hover);
+  --bs-btn-active-border-color: var(--primary-hover);
+  --bs-btn-color: var(--primary-ink);
+  --bs-btn-hover-color: var(--primary-ink);
+  box-shadow: var(--shadow-1);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  box-shadow: var(--shadow-2);
+}
+
+.btn-accent {
+  background-color: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-accent:hover,
+.btn-accent:focus-visible {
+  background-color: #D4C6B3;
+  border-color: #D4C6B3;
+  color: var(--accent-ink);
+}
+
+.btn-soft {
+  background-color: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+}
+
+.btn-soft:hover,
+.btn-soft:focus-visible {
+  background-color: var(--surface-2);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--ink);
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+  background-color: var(--surface-2);
+  color: var(--ink);
+}
+
+.btn:disabled,
+.btn.disabled,
+.btn[disabled] {
+  background-color: var(--surface-2) !important;
+  border-color: var(--line-strong) !important;
+  color: var(--muted) !important;
+  opacity: 1;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.link-more,
+.vsc-touch-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.25rem 0.45rem;
+  font-weight: 600;
+}
+
+.btn-close {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.page-link {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Surfaces & Cartes ---------- */
+.card {
+  --bs-card-border-radius: var(--radius-md);
+  --bs-card-border-color: var(--line);
+  --bs-card-bg: var(--surface);
+  --bs-card-inner-border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+
+.surface-flat {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.card-lift {
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+/* ---------- Prix FCFA ---------- */
+.price {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.price small {
+  font-size: 0.64em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-left: 0.16em;
+}
+
+/* ---------- Chips, Badges & Statuts ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.72rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  color: var(--ink-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  max-width: 100%;
+}
+
+.chip i {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.chip-allergen {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 24%, transparent);
+}
+
+.chip-regime {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.chip-ok {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 22%, transparent);
+}
+
+.chip-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.chip-primary {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.chip-gold {
+  background: var(--annual-bg);
+  color: var(--annual-ink);
+  border-color: var(--annual-border);
+}
+
+.badge-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-family: var(--font-label);
+  font-weight: 700;
+  padding: 0.38rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+  letter-spacing: 0.03em;
+}
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.badge-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.status-ok {
+  color: var(--success);
+}
+
+.status-off {
+  color: var(--muted);
+}
+
+.status-warn {
+  color: var(--warning);
+}
+
+.status-danger {
+  color: var(--danger);
+}
+
+.badge-annual-pass {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.82rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #1E242B 0%, #2F3842 100%);
+  color: #87C1E9;
+  border: 1px solid rgba(135, 193, 233, 0.55);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.badge-annual-pass i {
+  color: #87C1E9;
+}
+
+.badge-delivery {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.7rem;
+  border-radius: var(--radius-pill);
+  background: var(--delivery-bg);
+  color: var(--delivery-ink);
+  border: 1px solid var(--delivery-border);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.badge-scheduled {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.7rem;
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+/* 3 Opérations financières constantes */
+.op-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.34rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.op-topup {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+.op-annual {
+  background: var(--annual-bg);
+  color: var(--annual-ink);
+  border: 1px solid var(--annual-border);
+}
+
+.op-pickup {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success) 24%, transparent);
+}
+
+.list-icon.op-topup-icon {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.list-icon.op-annual-icon {
+  background: var(--annual-bg);
+  color: var(--annual-ink);
+}
+
+.list-icon.op-pickup-icon {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+/* Filtres allergènes */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-chip {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.84rem;
+  font-weight: 600;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.18s var(--ease);
+  cursor: pointer;
+}
+
+.filter-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filter-chip.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.filter-chip.is-active i {
+  color: var(--sky);
+}
+
+/* ---------- Alertes & États vides ---------- */
+.alert-soft {
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.05rem;
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  font-size: 0.92rem;
+}
+
+.alert-soft i {
+  font-size: 1.15rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.alert-warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 24%, transparent);
+}
+
+.alert-success {
+  background: var(--success-soft);
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 24%, transparent);
+}
+
+.alert-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 24%, transparent);
+}
+
+.alert-info {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+.allergen-box {
+  background: var(--danger-soft);
+  border: 1.5px solid var(--danger);
+  color: var(--danger);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1.25rem;
+  color: var(--muted);
+}
+
+.empty-state i {
+  font-size: 2.25rem;
+  display: block;
+  margin-bottom: 0.65rem;
+  opacity: 0.6;
+}
+
+.empty-state strong {
+  display: block;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  margin-bottom: 0.3rem;
+}
+
+/* ============================================================
+   COQUILLE PUBLIQUE / ÉLÈVE / PERSONNEL / PARENT (.app-shell)
+   Responsive web sur desktop, mobile-first + bottom-nav < 992px
+   ============================================================ */
+.app-shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid var(--line);
+}
+
+.app-header-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.app-desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.app-desktop-nav a {
+  min-height: 44px;
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.16s var(--ease), color 0.16s var(--ease);
+}
+
+.app-desktop-nav a:hover {
+  background: var(--primary-soft);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.app-desktop-nav a.is-active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.app-main {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 6rem;
+  min-width: 0;
+}
+
+.app-main.no-nav {
+  padding-bottom: 2.5rem;
+}
+
+@media (min-width: 992px) {
+  .app-header-inner {
+    padding: 0.75rem 1.5rem;
+  }
+  .app-main {
+    padding: 1.75rem 1.5rem 3rem;
+  }
+}
+
+.app-footer {
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  padding: 1rem 1.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Barre de navigation basse mobile */
+.bottom-nav,
+.vsc-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem calc(0.45rem + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  backdrop-filter: blur(16px) saturate(150%);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 18px rgba(29, 29, 27, 0.06);
+}
+
+.bottom-nav a,
+.vsc-bottom-nav a {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  min-height: 52px;
+  min-width: 0;
+  padding: 0.35rem 0.2rem;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+
+.bottom-nav a i,
+.vsc-bottom-nav a i {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.bottom-nav a:hover,
+.vsc-bottom-nav a:hover {
+  color: var(--ink);
+  background: var(--primary-soft);
+  text-decoration: none;
+}
+
+.bottom-nav a.is-active,
+.vsc-bottom-nav a.is-active {
+  color: var(--ink);
+}
+
+.bottom-nav a.is-active i,
+.vsc-bottom-nav a.is-active i {
+  color: var(--primary);
+}
+
+.bottom-nav a.is-active::after,
+.vsc-bottom-nav a.is-active::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+  margin-top: 1px;
+}
+
+/* ============================================================
+   COQUILLE ÉQUIPE & ADMIN (.admin-shell)
+   ============================================================ */
+.admin-shell {
+  display: flex;
+  min-height: 100svh;
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-sidebar {
+  width: 262px;
+  flex: 0 0 262px;
+  background: var(--ink);
+  color: rgba(255, 255, 255, 0.78);
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow-y: auto;
+}
+
+.admin-sidebar .brand,
+.admin-offcanvas .brand {
+  color: #FFFFFF;
+  margin-bottom: 1rem;
+  padding: 0 0.25rem;
+}
+
+.admin-sidebar .brand-name,
+.admin-offcanvas .brand-name {
+  color: #FFFFFF;
+}
+
+.admin-sidebar .brand-sub,
+.admin-offcanvas .brand-sub {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-sidebar .brand-logo,
+.admin-offcanvas .brand-logo {
+  background: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.admin-nav-label {
+  font-family: var(--font-label);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 0.9rem 0.65rem 0.3rem;
+}
+
+.admin-nav {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.admin-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.16s var(--ease), color 0.16s var(--ease);
+}
+
+.admin-nav a i {
+  font-size: 1.05rem;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.admin-nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+.admin-nav a.is-active {
+  background: rgba(135, 193, 235, 0.16);
+  color: #FFFFFF;
+  box-shadow: inset 3px 0 0 var(--sky);
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding: 0.9rem 0.5rem 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.82rem;
+}
+
+.admin-main-col {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-mobile-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 2px solid var(--primary);
+}
+
+.admin-mobile-bar .brand-name {
+  color: #FFFFFF;
+}
+
+.admin-mobile-bar .brand-sub {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.admin-offcanvas {
+  background: var(--ink);
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 290px;
+}
+
+.admin-content {
+  flex: 1;
+  min-width: 0;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+@media (min-width: 992px) {
+  .admin-content {
+    padding: 1.75rem 2rem 3rem;
+  }
+}
+
+.admin-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 1.35rem;
+}
+
+.admin-topbar > div:first-child {
+  min-width: 0;
+}
+
+/* ============================================================
+   COMPOSANTS ACCUEIL, AUTH & NOTIFICATIONS
+   ============================================================ */
+.vsc-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.25rem;
+  background: linear-gradient(135deg, var(--ink) 0%, #262E35 60%, #342A22 100%);
+  color: #FBF8F3;
+  border-bottom: 4px solid var(--primary);
+  box-shadow: var(--shadow-3);
+}
+
+@media (min-width: 768px) {
+  .vsc-hero {
+    padding: 2.5rem 2.5rem;
+  }
+}
+
+.vsc-hero h1 {
+  color: #FFFFFF;
+}
+
+.vsc-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+  padding: 0.42rem 0.85rem;
+  border-radius: var(--radius-pill);
+  background: rgba(240, 236, 228, 0.14);
+  color: #87C1E9;
+  border: 1px solid rgba(224, 214, 200, 0.32);
+  font-family: var(--font-label);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.vsc-narrow {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.vsc-auth-card {
+  padding: 1.5rem 1.25rem;
+}
+
+@media (min-width: 576px) {
+  .vsc-auth-card {
+    padding: 2rem 2rem;
+  }
+}
+
+.vsc-notif-item {
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.vsc-notif-item:last-child {
+  border-bottom: 0;
+}
+
+.vsc-notif-item.is-unread {
+  background: color-mix(in srgb, var(--primary-soft) 65%, var(--surface));
+}
+
+/* ============================================================
+   FORMULAIRES & CHECKBOXES / RADIOS TACTILES (>= 44px)
+   ============================================================ */
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.form-control,
+.form-select,
+.form-control-sm,
+.form-select-sm {
+  border-radius: var(--radius-sm);
+  border-color: var(--line-strong);
+  padding: 0.6rem 0.9rem;
+  min-height: 46px;
+  font-size: 1rem;
+  background-color: var(--surface);
+  color: var(--ink);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+  background-color: var(--primary-soft);
+  color: var(--ink-2);
+}
+
+.form-text ul {
+  padding-left: 1.15rem;
+  margin-bottom: 0;
+}
+
+.form-text li {
+  overflow-wrap: anywhere;
+}
+
+/* Pilule checkbox/radio tactile >= 44px */
+.vsc-check-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+  transition: border-color 0.16s var(--ease), background-color 0.16s var(--ease);
+}
+
+.vsc-check-pill:hover {
+  border-color: var(--primary);
+}
+
+.vsc-check-pill input[type="checkbox"],
+.vsc-check-pill input[type="radio"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.vsc-check-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--line-strong);
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s var(--ease);
+}
+
+.vsc-check-box::after {
+  content: "";
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid #FFFFFF;
+  border-bottom: 2px solid #FFFFFF;
+  transform: rotate(-45deg) scale(0);
+  margin-top: -2px;
+  transition: transform 0.15s var(--ease);
+}
+
+.vsc-check-pill:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.vsc-check-pill:has(input:checked) .vsc-check-box {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.vsc-check-pill.is-danger:has(input:checked) {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.vsc-check-pill.is-danger:has(input:checked) .vsc-check-box {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.vsc-check-pill.is-warn:has(input:checked) {
+  border-color: var(--warning);
+  background: var(--warning-soft);
+}
+
+.vsc-check-pill.is-warn:has(input:checked) .vsc-check-box {
+  background: var(--warning);
+  border-color: var(--warning);
+}
+
+.vsc-check-pill:has(input:checked) .vsc-check-box::after {
+  transform: rotate(-45deg) scale(1);
+}
+
+.vsc-check-pill:has(input:focus-visible) {
+  box-shadow: var(--ring);
+}
+
+/* ============================================================
+   COMPOSANTS FINANCIERS & PORTEFEUILLE
+   ============================================================ */
+.balance-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  padding: 1.35rem 1.4rem;
+  background: linear-gradient(135deg, var(--ink) 0%, #232A31 55%, #2E3A45 100%);
+  color: #F8F6F1;
+  box-shadow: var(--shadow-3);
+}
+
+.balance-card::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  right: -70px;
+  top: -90px;
+  background: radial-gradient(circle, rgba(135, 193, 235, 0.5), transparent 65%);
+  pointer-events: none;
+}
+
+.balance-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.balance-card .label {
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(248, 246, 241, 0.72);
+}
+
+.balance-card .amount {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 5vw, 2.4rem);
+  line-height: 1.05;
+  margin: 0.45rem 0 0.25rem;
+}
+
+.balance-card .amount small {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  margin-left: 0.25rem;
+}
+
+.balance-card .meta {
+  font-size: 0.82rem;
+  color: rgba(248, 246, 241, 0.78);
+}
+
+.forecast-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.75rem;
+  margin-top: 0.8rem;
+}
+
+.forecast-bar .f-label {
+  font-family: var(--font-label);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(248, 246, 241, 0.72);
+}
+
+.forecast-bar .f-val {
+  font-weight: 700;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+  color: #FFFFFF;
+}
+
+.forecast-bar .f-val.is-warn {
+  color: #FCD34D;
+}
+
+.pass-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  padding: 1.4rem 1.45rem;
+  background: linear-gradient(135deg, #161B20 0%, #242D36 60%, #2C3945 100%);
+  color: #FBF8F3;
+  border: 1px solid rgba(135, 193, 233, 0.42);
+  box-shadow: var(--shadow-3);
+}
+
+.pass-card::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  right: -70px;
+  top: -90px;
+  background: radial-gradient(circle, rgba(135, 193, 233, 0.36), transparent 68%);
+  pointer-events: none;
+}
+
+.pass-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.pass-card .pass-title {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  color: #FFFFFF;
+  margin: 0.35rem 0 0.25rem;
+}
+
+/* Montants prédéfinis & options paiement */
+.amount-chip {
+  position: relative;
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  min-height: 64px;
+  padding: 0.5rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: all 0.18s var(--ease);
+}
+
+.amount-chip input[type="radio"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.amount-chip strong {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.amount-chip span {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.amount-chip:hover {
+  border-color: var(--primary);
+}
+
+.amount-chip.is-active,
+.amount-chip:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: var(--shadow-1);
+}
+
+.amount-chip.is-active strong,
+.amount-chip:has(input:checked) strong,
+.amount-chip.is-active span,
+.amount-chip:has(input:checked) span {
+  color: var(--primary);
+}
+
+.pay-option {
+  position: relative;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 0.78rem 0.9rem;
+  min-height: 54px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+  text-align: left;
+  width: 100%;
+}
+
+.pay-option input[type="radio"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.pay-option:hover {
+  border-color: var(--primary);
+}
+
+.pay-option.is-active,
+.pay-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: var(--shadow-1);
+}
+
+.pay-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #FFFFFF;
+  flex: 0 0 auto;
+}
+
+.pay-wave { background: #1DC4F5; color: #0B2533; }
+.pay-orange { background: #FF7900; }
+.pay-mtn { background: #FFCC00; color: #14171A; }
+.pay-moov { background: #005BAC; }
+.pay-bank { background: #1E6B4B; }
+
+.sim-gateway {
+  border: 1.5px dashed var(--primary);
+  background: color-mix(in srgb, var(--primary-soft) 50%, var(--surface));
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+
+/* Listes & journal */
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.85rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.list-row:last-child {
+  border-bottom: 0;
+}
+
+.list-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+}
+
+.list-icon.ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.list-icon.out {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.list-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.list-title {
+  font-size: 0.94rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.list-sub {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.list-amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.list-amount.in {
+  color: var(--success);
+}
+
+/* ============================================================
+   MENU, COMPOSER, RÉSERVATIONS & TICKET QR
+   ============================================================ */
+.day-tabs {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 0.2rem 0 0.55rem;
+  scrollbar-width: thin;
+}
+
+.day-tab {
+  flex: 1 0 72px;
+  min-width: 68px;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.45rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: all 0.18s var(--ease);
+}
+
+.day-tab strong {
+  display: block;
+  font-size: 1.05rem;
+  color: var(--ink);
+  font-weight: 700;
+  margin-top: 0.12rem;
+}
+
+.day-tab:hover {
+  border-color: var(--primary);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.day-tab.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: rgba(246, 246, 246, 0.78);
+  box-shadow: var(--shadow-2);
+}
+
+.day-tab.is-active strong {
+  color: var(--paper);
+}
+
+.dish-card {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 0.9rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  align-items: stretch;
+  height: 100%;
+}
+
+.dish-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+.dish-photo,
+.dish-thumb {
+  width: 112px;
+  min-height: 120px;
+  border-radius: calc(var(--radius-lg) - 8px);
+  overflow: hidden;
+  background: var(--surface-2);
+  position: relative;
+}
+
+.dish-photo img,
+.dish-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-tag {
+  position: absolute;
+  left: 0.45rem;
+  top: 0.45rem;
+  background: rgba(29, 29, 27, 0.78);
+  color: #FFFFFF;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.5rem;
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(6px);
+}
+
+.vsc-dish-thumb-sm {
+  width: 72px;
+  height: 72px;
+  min-height: 72px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.vsc-dish-thumb-sm img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 480px) {
+  .dish-card {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    padding: 0.6rem;
+  }
+  .dish-photo,
+  .dish-thumb {
+    width: 100%;
+    height: 172px;
+    min-height: 0;
+  }
+}
+
+.seats {
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+
+.seats i { color: var(--success); }
+.seats.is-low i { color: var(--warning); }
+.seats.is-full { color: var(--danger); }
+.seats.is-full i { color: var(--danger); }
+
+.choice-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.75rem 0.9rem;
+  min-height: 58px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+  width: 100%;
+  text-align: left;
+  min-width: 0;
+}
+
+.choice-card input[type="radio"],
+.choice-card input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.choice-card:hover {
+  border-color: var(--primary);
+}
+
+.choice-card.is-selected,
+.choice-card:has(input:checked) {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary-soft) 50%, var(--surface));
+  box-shadow: var(--shadow-1);
+}
+
+.choice-card.is-skip {
+  border-style: dashed;
+  background: var(--paper);
+}
+
+.choice-card.is-skip.is-selected,
+.choice-card.is-skip:has(input:checked) {
+  border-style: solid;
+  border-color: var(--ink);
+  background: var(--surface-2);
+}
+
+.choice-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex: 0 0 56px;
+}
+
+.vsc-score-select {
+  width: 82px;
+  min-height: 44px;
+}
+
+/* Ticket QR */
+.ticket {
+  --notch: 18px;
+  position: relative;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.ticket-top {
+  padding: 1.5rem 1.25rem 1.15rem;
+  background: var(--ink);
+  color: var(--paper);
+  text-align: center;
+}
+
+.ticket-top .eyebrow {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.ticket-top h1 {
+  color: var(--paper);
+  font-size: 1.45rem;
+  margin: 0.3rem 0 0.15rem;
+}
+
+.ticket-top p {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.ticket-perforation {
+  position: relative;
+  height: 26px;
+  background: var(--surface);
+}
+
+.ticket-perforation::before,
+.ticket-perforation::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: var(--notch);
+  height: var(--notch);
+  background: var(--bg);
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+
+.ticket-perforation::before { left: calc(var(--notch) / -2); }
+.ticket-perforation::after { right: calc(var(--notch) / -2); }
+
+.ticket-perforation span {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 50%;
+  border-top: 2px dashed var(--line-strong);
+}
+
+.ticket-body {
+  padding: 0.4rem 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.qr-frame {
+  width: min(250px, 72vw);
+  margin: 0.4rem auto 0.9rem;
+  padding: 0.85rem;
+  border-radius: var(--radius-md);
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+
+.qr-frame svg,
+.qr-frame img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.short-code {
+  font-family: var(--font-mono);
+  font-size: clamp(1.65rem, 6vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  margin: 0.15rem 0 0.25rem;
+  color: var(--ink);
+  padding-left: 0.28em;
+}
+
+.ticket-meta {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}
+
+.ticket-meta > div {
+  text-align: center;
+}
+
+.ticket-meta strong {
+  display: block;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.ticket.is-served .ticket-top {
+  background: var(--success);
+}
+
+.ticket.is-served .qr-frame {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+
+.stamp {
+  display: inline-block;
+  border: 2px solid currentColor;
+  color: var(--success);
+  padding: 0.25rem 0.85rem;
+  border-radius: var(--radius-xs);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   KPI, TABLEAUX, COMPTOIR & DASHBOARD
+   ============================================================ */
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+  box-shadow: var(--shadow-1);
+  height: 100%;
+}
+
+.kpi-custody {
+  background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
+  border: 1.5px dashed var(--primary);
+}
+
+.kpi-label {
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  line-height: 1.08;
+  margin: 0.45rem 0 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 1.15rem 1.2rem;
+  box-shadow: var(--shadow-1);
+}
+
+.table-clean {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.table-clean th {
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  border-bottom: 1px solid var(--line);
+  padding: 0.6rem 0.5rem;
+  white-space: nowrap;
+}
+
+.table-clean td {
+  padding: 0.68rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.table-clean tr:last-child td {
+  border-bottom: 0;
+}
+
+.input-code {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-align: center;
+  text-transform: uppercase;
+  min-height: 62px;
+}
+
+.scan-result {
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+.scan-result.ok {
+  background: var(--success-soft);
+  border-color: color-mix(in srgb, var(--success) 25%, transparent);
+  color: var(--success);
+}
+
+.scan-result.ko {
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 25%, transparent);
+  color: var(--danger);
+}
+
+.vsc-cap-input {
+  width: 96px;
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+
+/* ============================================================
+   GRILLINO SHOP LAYOUT × CHARTE OFFICIELLE VATEL (V2.2)
+   Inspiré de https://html.vecurosoft.com/grillino/demo/shop.html
+   adapté aux couleurs (#1D1D1B, #87C1E9, #1B6B9E, #DCECF8, #EDF5FB, #87C1E9)
+   et polices (Playfair Display, Work Sans, Raleway) de vatel.com/fr/
+   ============================================================ */
+
+/* 1. Header Grillino (header-layout2) */
+.vs-call-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+.vs-call-widget:hover { text-decoration: none; color: var(--primary); }
+.vs-call-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex: 0 0 46px;
+  transition: all .2s var(--ease);
+}
+.vs-call-widget:hover .vs-call-icon {
+  background: var(--primary);
+  color: #FFFFFF;
+}
+.vs-call-label {
+  display: block;
+  font-size: .72rem;
+  color: var(--muted);
+  line-height: 1.15;
+}
+.vs-call-number {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.vs-circle-btn {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: all .2s var(--ease);
+}
+.vs-circle-btn:hover {
+  background: var(--primary);
+  color: #FFFFFF;
+  text-decoration: none;
+}
+.vs-circle-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #FFFFFF;
+  font-size: .68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #FFFFFF;
+}
+
+/* 2. Bannière Hero / Breadcrumb Grillino (breadcumb-layout1 + pilule flottante) */
+.vs-breadcumb {
+  position: relative;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, rgba(29, 29, 27, 0.82) 0%, rgba(54, 54, 54, 0.72) 55%, rgba(27, 107, 158, 0.76) 100%),
+    url("../img/dishes/brochettes.jpg") center/cover no-repeat;
+  padding: clamp(2.6rem, 5vw, 4.4rem) 1.25rem clamp(3.4rem, 6vw, 5.2rem);
+  text-align: center;
+  color: #FFFFFF;
+  margin-bottom: 2.9rem;
+  box-shadow: var(--shadow-2);
+}
+.vs-breadcumb-sub {
+  font-family: var(--font-label);
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--surface-2);
+  margin-bottom: .35rem;
+}
+.vs-breadcumb-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1.12;
+}
+.vs-breadcumb-pill {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  z-index: 3;
+  background: #FFFFFF;
+  color: var(--muted);
+  padding: .82rem 2.1rem;
+  border-radius: 50px;
+  box-shadow: 0px 10px 50px rgba(0, 0, 0, 0.16);
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .92rem;
+  font-weight: 600;
+  max-width: 92%;
+  white-space: nowrap;
+}
+.vs-breadcumb-pill a {
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .38rem;
+}
+.vs-breadcumb-pill a i { color: var(--primary); }
+.vs-breadcumb-pill a:hover { color: var(--primary); }
+.vs-breadcumb-pill .sep { color: var(--muted); }
+.vs-breadcumb-pill .current { color: var(--primary); font-weight: 700; }
+
+/* 3. Barre de tri / synthèse Grillino (product-sort-bar) */
+.vs-sort-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  box-shadow: 0px 6px 35px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+.vs-sort-title {
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* 4. Carte Plat Grillino (.vs-product) */
+.vs-product {
+  background: #FFFFFF;
+  border: 0;
+  border-radius: 0;
+  box-shadow: 0px 6px 50px 0px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+}
+.vs-product:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 14px 55px 0px rgba(0, 0, 0, 0.14);
+}
+.vs-product .product-header {
+  position: relative;
+  overflow: hidden;
+  height: 224px;
+  background: var(--ink);
+}
+.vs-product .product-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(29, 29, 27, 0.35);
+  opacity: 0;
+  z-index: 2;
+  transition: opacity .35s var(--ease);
+  pointer-events: none;
+}
+.vs-product:hover .product-header::before {
+  opacity: 1;
+}
+.vs-product .product-img {
+  width: 100%;
+  height: 100%;
+}
+.vs-product .product-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .55s var(--ease);
+}
+.vs-product:hover .product-img img {
+  transform: scale(1.06);
+}
+/* Badge blanc en haut à droite (comme le -5% / -50% de Grillino) */
+.vs-product .vs-discount {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  z-index: 3;
+  background: #FFFFFF;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: .8rem;
+  line-height: 1;
+  padding: 8px 12px;
+  border-radius: 3px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  font-variant-numeric: tabular-nums;
+}
+.vs-product .vs-discount.is-low {
+  color: var(--warning);
+}
+.vs-product .vs-discount.is-full {
+  background: var(--danger);
+  color: #FFFFFF;
+}
+/* Badge catégorie en haut à gauche */
+.vs-product .vs-cat-tag {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  z-index: 3;
+  background: rgba(29, 29, 27, 0.85);
+  color: #FFFFFF;
+  font-family: var(--font-label);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 8px 11px;
+  border-radius: 3px;
+  backdrop-filter: blur(4px);
+}
+.vs-product .product-body {
+  padding: 24px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+/* Ligne de prix Bronze Vatel au-dessus du titre (comme Grillino) */
+.vs-product .vs-price {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--primary);
+  margin-bottom: .4rem;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.vs-product .vs-price-sub {
+  font-size: .8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+/* Titre du plat en serif (comme Rufina/Playfair dans Grillino) */
+.vs-product .vs-product-title {
+  font-family: var(--font-display);
+  font-size: 1.28rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 .5rem;
+  line-height: 1.25;
+}
+.vs-product .vs-product-title a {
+  color: inherit;
+  text-decoration: none;
+}
+.vs-product .vs-product-title a:hover {
+  color: var(--primary);
+}
+/* Duo de boutons rectangulaires Grillino en bas de carte (Order Now + Carré icône) */
+.vs-action-row {
+  margin-top: auto;
+  padding-top: .85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vs-btn-order {
+  background: var(--primary);
+  color: #FFFFFF;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: .92rem;
+  padding: 0 22px;
+  height: 46px;
+  border-radius: 0;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  text-decoration: none;
+  transition: background .22s var(--ease), transform .18s var(--ease);
+}
+.vs-btn-order:hover, .vs-btn-order:focus {
+  background: var(--ink);
+  color: #FFFFFF;
+  text-decoration: none;
+}
+.vs-btn-square {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  background: #87C1E9;
+  color: #1D1D1B;
+  border-radius: 0;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.08rem;
+  text-decoration: none;
+  transition: background .22s var(--ease);
+}
+.vs-btn-square:hover, .vs-btn-square:focus {
+  background: var(--ink);
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+
+/* ============================================================
+   FOODDESK (COMPLET) & SEGO (DASHBOARD) × CHARTE OFFICIELLE VATEL
+   Sources :
+     - https://fooddesk.dexignlab.com/react/ (Layout 3 colonnes, Balance card,
+       Address/Livraison block, Category boxes, Dish card avec bouton +)
+     - https://sego.dexignzone.com/django/?storefront (Cartes KPI dégradées
+       avec anneau circulaire, Orders Summary 3 boîtes, Daily Trending #1/#2/#3)
+     - Charte Vatel : #1D1D1B, #363636, #87C1E9, #1B6B9E, #DCECF8, #EDF5FB, #87C1E9
+   ============================================================ */
+
+/* ---------- 1. FOODDESK TOPBAR & RIGHT PANEL ---------- */
+.fd-topbar {
+  background: linear-gradient(90deg, #1D1D1B 0%, #363636 45%, #1B6B9E 100%);
+  color: #FFFFFF;
+  padding: .75rem 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.fd-search-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
+  padding: .5rem 1.1rem;
+  border-radius: 12px;
+  font-size: .88rem;
+  min-width: min(100%, 440px);
+}
+.fd-search-pill .fd-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-weight: 600;
+  padding-right: .75rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.28);
+  white-space: nowrap;
+}
+.fd-profile-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #FFFFFF;
+  padding: .35rem .85rem .35rem .4rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: .88rem;
+}
+.fd-profile-pill:hover {
+  background: rgba(255, 255, 255, 0.24);
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+/* Panneau latéral droit FoodDesk (Your Balance + Your Address/Livraison + Order Menu) */
+.fd-right-panel {
+  background: #FFFFFF;
+  border: 1px solid rgba(135, 193, 233, 0.35);
+  border-radius: 18px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-1);
+}
+.fd-balance-box {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  padding: 1.2rem 1.25rem;
+  background: linear-gradient(135deg, #1B6B9E 0%, #87C1E9 55%, #1D1D1B 100%);
+  color: #FFFFFF;
+  margin-bottom: 1.1rem;
+  box-shadow: 0 10px 25px rgba(27, 107, 158, 0.25);
+}
+.fd-balance-box::before,
+.fd-balance-box::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.11);
+  pointer-events: none;
+}
+.fd-balance-box::before {
+  width: 150px;
+  height: 150px;
+  right: -45px;
+  top: -45px;
+}
+.fd-balance-box::after {
+  width: 110px;
+  height: 110px;
+  left: -30px;
+  bottom: -45px;
+}
+.fd-balance-box > * {
+  position: relative;
+  z-index: 1;
+}
+.fd-balance-label {
+  font-size: .76rem;
+  font-weight: 600;
+  opacity: .88;
+}
+.fd-balance-amount {
+  font-family: var(--font-display);
+  font-size: 1.95rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: .2rem 0 .75rem;
+  font-variant-numeric: tabular-nums;
+}
+.fd-balance-actions {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.fd-pill-white {
+  background: #FFFFFF;
+  color: #1D1D1B;
+  font-weight: 700;
+  font-size: .78rem;
+  padding: .45rem .85rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  text-decoration: none;
+  border: 0;
+  min-height: 38px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.fd-pill-white:hover {
+  background: var(--surface-2);
+  color: #1D1D1B;
+  text-decoration: none;
+}
+
+/* Bloc Adresse / Mode de remise FoodDesk (Your Address -> Elm Street, 23 [Change]) */
+.fd-address-box {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.fd-address-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .35rem;
+}
+.fd-address-title {
+  font-weight: 700;
+  font-size: .95rem;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+.fd-address-title i {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+.fd-btn-change {
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: .76rem;
+  padding: .28rem .7rem;
+  border-radius: 6px;
+  text-decoration: none;
+}
+.fd-btn-change:hover {
+  background: var(--primary);
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+/* Mini-lignes de commande FoodDesk (Order Menu) */
+.fd-order-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .6rem 0;
+  border-bottom: 1px dashed var(--line);
+}
+.fd-order-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--primary-vatel, var(--line));
+  padding: 2px;
+  background: #FFFFFF;
+  flex: 0 0 52px;
+}
+
+/* Cartes Catégories FoodDesk (Category boxes) */
+.fd-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: .75rem;
+  margin-bottom: 1.5rem;
+}
+.fd-cat-box {
+  background: #FFFFFF;
+  border: 1px solid rgba(135, 193, 233, 0.42);
+  border-radius: 12px;
+  padding: .9rem .75rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink);
+  transition: all .22s var(--ease);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+}
+.fd-cat-box:hover, .fd-cat-box.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #FFFFFF;
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(27, 107, 158, 0.22);
+}
+.fd-cat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+.fd-cat-box:hover .fd-cat-icon, .fd-cat-box.is-active .fd-cat-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* Carte Plat FoodDesk (Popular Dishes avec ruban, étoiles, prix à gauche et bouton + carré à droite) */
+.fd-dish-card {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid rgba(135, 193, 233, 0.38);
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: all .25s var(--ease);
+}
+.fd-dish-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 12px 32px rgba(29, 29, 27, 0.1);
+  transform: translateY(-3px);
+}
+.fd-ribbon {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  background: var(--primary);
+  color: #FFFFFF;
+  font-family: var(--font-label);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: .28rem .75rem;
+  border-radius: 0 6px 6px 0;
+  z-index: 2;
+}
+.fd-ribbon.is-danger {
+  background: var(--danger);
+}
+.fd-plus-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  background: var(--primary);
+  color: #FFFFFF;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background .2s var(--ease);
+}
+.fd-plus-btn:hover {
+  background: var(--ink);
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+/* ---------- 2. SEGO DJANGO DASHBOARD (KPI GRADIENT CARDS & ORDERS SUMMARY) ---------- */
+.sego-kpi {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  padding: 1.2rem 4.8rem 1.2rem 1.25rem;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 10px 28px rgba(29, 29, 27, 0.14);
+  height: 100%;
+}
+.sego-kpi > div:first-child {
+  min-width: 0;
+  width: 100%;
+}
+.sego-kpi-bronze {
+  background: linear-gradient(135deg, #1D1D1B 0%, #1B6B9E 55%, #87C1E9 100%);
+}
+.sego-kpi-dark {
+  background: linear-gradient(135deg, #1D1D1B 0%, #363636 65%, #5F5A54 100%);
+}
+.sego-kpi-blue {
+  background: linear-gradient(135deg, #164666 0%, #1E5A82 55%, #87C1E9 100%);
+}
+.sego-kpi-emerald {
+  background: linear-gradient(135deg, #164E36 0%, #1E6B4B 60%, #3B9B72 100%);
+}
+.sego-kpi-num {
+  font-family: var(--font-display);
+  font-size: clamp(1.18rem, 1.38vw, 1.48rem);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: .28rem;
+  font-variant-numeric: tabular-nums;
+  color: #FFFFFF;
+}
+.sego-kpi-label {
+  font-size: .8rem;
+  font-weight: 600;
+  opacity: .94;
+  line-height: 1.25;
+}
+.sego-kpi-sub {
+  font-size: .71rem;
+  opacity: .8;
+  margin-top: .2rem;
+  line-height: 1.25;
+}
+.sego-kpi > .sego-kpi-ring {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* Icône circulaire blanche avec anneau 270° typique de Sego */
+.sego-kpi-ring {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.22rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+}
+.sego-kpi-ring::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.78);
+  border-left-color: transparent;
+  transform: rotate(-35deg);
+}
+.sego-kpi-dark .sego-kpi-ring { color: #1D1D1B; }
+.sego-kpi-blue .sego-kpi-ring { color: #1E5A82; }
+.sego-kpi-emerald .sego-kpi-ring { color: #1E6B4B; }
+
+/* Boîtes de résumé Sego (25 On Delivery | 60 Delivered | 7 Canceled) */
+.sego-stat-boxes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+}
+.sego-stat-box {
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: .85rem .9rem;
+  background: #FFFFFF;
+}
+.sego-stat-box strong {
+  display: block;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin-bottom: .2rem;
+}
+.sego-stat-box span {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Classement Sego Daily Trending Menus (#1, #2, #3) */
+.sego-trending-row {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.sego-trending-row:last-child { border-bottom: 0; }
+.sego-rank {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--muted);
+  width: 34px;
+  flex: 0 0 34px;
+}
+.sego-trending-thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex: 0 0 54px;
+}
+
+
+/* ============================================================
+   CHARTE OFFICIELLE SECTIONS 0 À 12 — VATEL SMART CANTEEN
+   - Zéro bronze / zéro brun doré
+   - Vert Lagune (#0B6E5B) · Piment (#C92A15) · Mangue (#FFB830 texte #1D1D1B) · Anthracite (#1D1D1B)
+   - Échelle 32 / 24 / 20 / 16 / 14 px · Fraunces + Work Sans
+   ============================================================ */
+
+body {
+  font-size: var(--fs-16);
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.display-xl, h1.display-lg { font-size: var(--fs-32); font-family: var(--font-display); }
+.display-md, h2.h5 { font-size: var(--fs-24); font-family: var(--font-display); }
+.vs-product-title, h3.h5, h3.h6 { font-size: var(--fs-20); font-family: var(--font-display); }
+.small { font-size: var(--fs-14); }
+.price, .tabular { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+/* 1. Les 3 opérations financières (Recharge · Annuel · Retrait) */
+.op-topup {
+  background: var(--lagoon-soft) !important;
+  color: var(--lagoon-dark) !important;
+  border: 1px solid rgba(11, 110, 91, 0.35) !important;
+}
+.op-annual {
+  background: var(--mango) !important;
+  color: #1D1D1B !important;
+  border: 1px solid rgba(29, 29, 27, 0.2) !important;
+}
+.op-pickup {
+  background: var(--anthracite) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--anthracite) !important;
+}
+.list-icon.op-topup-icon { background: var(--lagoon-soft) !important; color: var(--lagoon-dark) !important; }
+.list-icon.op-annual-icon { background: var(--mango) !important; color: #1D1D1B !important; }
+.list-icon.op-pickup-icon { background: var(--anthracite) !important; color: #FFFFFF !important; }
+
+/* Badge « Année soldée » élégant en Mangue (texte foncé #1D1D1B, aucun montant - Sections 1, 4.1, 12) */
+.badge-annual-pass {
+  background: var(--mango) !important;
+  color: #1D1D1B !important;
+  border: 1px solid rgba(29, 29, 27, 0.22) !important;
+  font-weight: 700;
+}
+.badge-annual-pass i {
+  color: #1D1D1B !important;
+}
+
+/* Carte « Solde Vatel Cantine » */
+.balance-card,
+.fd-balance-box {
+  background: var(--lagoon-grad) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 14px 34px rgba(11, 110, 91, 0.24) !important;
+}
+
+/* 2. Action principale par écran */
+.btn-piment,
+.btn-chili {
+  background: var(--chili) !important;
+  border: 1px solid var(--chili) !important;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  min-height: 48px;
+  padding: .75rem 1.45rem;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 8px 22px rgba(201, 42, 21, 0.26);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  transition: transform 180ms var(--ease), background 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+.btn-piment:hover,
+.btn-piment:focus,
+.btn-chili:hover,
+.btn-chili:focus {
+  background: var(--chili-hover) !important;
+  border-color: var(--chili-hover) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+.btn-piment:active,
+.btn-chili:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+/* Boutons secondaires Vert Lagune / Anthracite (pour ne jamais avoir 2 boutons Piment sur un écran) */
+.btn-primary {
+  --bs-btn-bg: var(--lagoon);
+  --bs-btn-border-color: var(--lagoon);
+  --bs-btn-hover-bg: var(--lagoon-dark);
+  --bs-btn-hover-border-color: var(--lagoon-dark);
+  --bs-btn-color: #FFFFFF;
+  background: var(--lagoon);
+  border-color: var(--lagoon);
+  color: #FFFFFF;
+}
+.btn-accent {
+  background: var(--mango);
+  border-color: var(--mango);
+  color: #1D1D1B !important;
+  font-weight: 700;
+}
+.btn-accent:hover {
+  background: var(--mango-hover);
+  color: #1D1D1B !important;
+}
+
+/* 3. Cartes de Plats (photo 4:3 coins arrondis 16 px, ruban catégorie,
+      badge portions restantes qui passe en orange < 10 « Bientôt complet », bouton rond + de 44 px, AUCUN prix par plat) */
+.vs-product,
+.dish-select-card {
+  background: #FFFFFF;
+  border: 2px solid rgba(29, 29, 27, 0.08);
+  border-radius: 18px !important;
+  overflow: hidden;
+  padding: .75rem;
+  box-shadow: var(--shadow-1);
+  transition: transform 200ms var(--ease), box-shadow 200ms var(--ease), border-color 200ms var(--ease);
+}
+.vs-product:hover,
+.dish-select-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-2);
+}
+.vs-product.is-selected,
+.dish-select-card.is-selected,
+.choice-card.is-selected {
+  border: 2.5px solid var(--lagoon) !important;
+  background: color-mix(in srgb, var(--lagoon-soft) 45%, #FFFFFF) !important;
+  box-shadow: 0 10px 26px rgba(11, 110, 91, 0.16);
+}
+.vs-product .product-header {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  height: auto !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+  background: var(--ink);
+}
+/* Ruban de catégorie en haut à gauche & badge portions restantes (sans chevauchement) */
+.vs-product .vs-cat-tag,
+.fd-ribbon {
+  background: var(--mango) !important;
+  color: #1D1D1B !important;
+  font-weight: 700 !important;
+  font-size: .74rem;
+  letter-spacing: .04em;
+  padding: 5px 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  left: 12px;
+  top: 12px;
+}
+.vs-product .vs-discount {
+  background: #FFFFFF;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: .75rem;
+  padding: 5px 10px;
+  border-radius: 999px;
+  right: 12px;
+  bottom: 12px;
+  top: auto;
+}
+.vs-product .vs-discount.is-low {
+  background: #FEF0C7;
+  color: #8F4F06;
+  border: 1px solid #F5A623;
+}
+.vs-product .vs-discount.is-full {
+  background: var(--danger);
+  color: #FFFFFF;
+}
+/* Bouton rond « + » de 44 x 44 px */
+.btn-round-plus {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 50%;
+  background: var(--lagoon);
+  color: #FFFFFF;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 200ms var(--ease), background 200ms var(--ease);
+}
+.btn-round-plus:hover,
+.btn-round-plus:focus {
+  background: var(--lagoon-dark);
+  color: #FFFFFF;
+  transform: scale(1.06);
+  text-decoration: none;
+}
+.is-selected .btn-round-plus {
+  background: var(--lagoon-dark);
+}
+
+/* Indicateur 3 étapes en haut du menu/composition : 1. Entrée -> 2. Plat principal -> 3. Dessert */
+.steps-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .6rem;
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: .65rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-1);
+}
+.step-pill {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .6rem .85rem;
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: var(--fs-14);
+  text-decoration: none;
+  min-height: 44px;
+}
+.step-pill:hover {
+  background: var(--lagoon-soft);
+  color: var(--lagoon-dark);
+  text-decoration: none;
+}
+.step-pill.is-active {
+  background: var(--lagoon);
+  color: #FFFFFF;
+}
+.step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(11, 110, 91, 0.14);
+  color: var(--lagoon-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: .82rem;
+  flex: 0 0 26px;
+}
+.step-pill.is-active .step-num {
+  background: #FFFFFF;
+  color: var(--lagoon-dark);
+}
+
+/* Pastilles 5 jours de la semaine sur l'accueil */
+.week-pills {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .5rem;
+}
+.week-pill {
+  background: #FFFFFF;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: .65rem .45rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink);
+  min-height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .2rem;
+  transition: transform 180ms var(--ease), border-color 180ms var(--ease);
+}
+.week-pill:hover {
+  border-color: var(--lagoon);
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: var(--ink);
+}
+.week-pill.is-reserved {
+  border-color: var(--lagoon);
+  background: var(--lagoon-soft);
+  color: var(--lagoon-dark);
+}
+.week-pill.is-declined {
+  background: var(--anthracite-soft);
+  color: var(--muted);
+}
+
+/* Barre fixe en bas sur téléphone (< 992 px) : « Mon plateau · Total · Réserver » */
+.mobile-tray-bar {
+  position: fixed;
+  left: .75rem;
+  right: .75rem;
+  bottom: calc(68px + env(safe-area-inset-bottom));
+  z-index: 35;
+  background: var(--ink);
+  color: #FFFFFF;
+  border-radius: 18px;
+  padding: .75rem 1rem;
+  box-shadow: var(--shadow-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+/* 4. Profil Alimentaire : 4 familles visuellement distinctes */
+.vsc-check-pill.family-allergy {
+  background: #FEE4E2;
+  color: #912018;
+  border-color: rgba(180, 35, 24, 0.35);
+}
+.vsc-check-pill.family-intolerance {
+  background: #FEF0C7;
+  color: #7A4104;
+  border-color: rgba(143, 79, 6, 0.38);
+}
+.vsc-check-pill.family-regime {
+  background: #E0F3EE;
+  color: #074F41;
+  border-color: rgba(11, 110, 91, 0.38);
+}
+.vsc-check-pill.family-pref {
+  background: #E6EAEE;
+  color: #2A2F35;
+  border-color: rgba(42, 47, 53, 0.25);
+}
+
+/* 5. Administration Sego : 4 dégradés Vert Lagune / Anthracite / Mangue (texte foncé) / Piment foncé
+      Anneau de progression sur les ratios (.has-ratio-ring) */
+.sego-kpi-lagoon {
+  background: var(--lagoon-grad) !important;
+  color: #FFFFFF !important;
+}
+.sego-kpi-anthracite {
+  background: var(--anthracite-grad) !important;
+  color: #FFFFFF !important;
+}
+.sego-kpi-mango {
+  background: var(--mango-grad) !important;
+  color: #1D1D1B !important;
+}
+.sego-kpi-mango .sego-kpi-num,
+.sego-kpi-mango .sego-kpi-label,
+.sego-kpi-mango .sego-kpi-sub {
+  color: #1D1D1B !important;
+  opacity: 1;
+}
+.sego-kpi-chili {
+  background: var(--chili-dark-grad) !important;
+  color: #FFFFFF !important;
+}
+/* Anneau de progression activé sur .has-ratio-ring */
+.sego-kpi-ring::after {
+  display: none !important;
+}
+.sego-kpi-ring.has-ratio-ring::after {
+  display: block !important;
+  border-color: rgba(29, 29, 27, 0.75);
+  border-left-color: transparent;
+}
+.sego-kpi-mango .sego-kpi-ring {
+  color: #1D1D1B !important;
+}
+.sego-kpi-lagoon .sego-kpi-ring {
+  color: var(--lagoon-dark) !important;
+}
+.sego-kpi-chili .sego-kpi-ring {
+  color: var(--chili) !important;
+}
+
+/* Synthèse des commandes Admin : 4 cases (Livrés, Servis au comptoir, Je ne mange pas, Non retirés) */
+.sego-stat-boxes-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .65rem;
+}
+@media (min-width: 576px) {
+  .sego-stat-boxes-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 6. Équipe Cantine — Cuisine haute lisibilité (chiffres 48 px) & Comptoir plein écran */
+.kitchen-48 {
+  font-family: var(--font-display);
+  font-size: 3rem !important; /* 48 px */
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.kitchen-portion-badge {
+  font-size: 2.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--lagoon-dark);
+  background: var(--lagoon-soft);
+  padding: .35rem .9rem;
+  border-radius: 14px;
+  line-height: 1.1;
+}
+.counter-fullscreen-ok {
+  background: var(--lagoon);
+  color: #FFFFFF;
+  border-radius: 24px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(11, 110, 91, 0.3);
+}
+.counter-fullscreen-ko {
+  background: var(--danger);
+  color: #FFFFFF;
+  border-radius: 24px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(180, 35, 24, 0.3);
+}
+
+/* 7. Squelettes de chargement & Animation plateau */
+@keyframes vsc-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-card {
+  border-radius: 16px;
+  min-height: 180px;
+  background: linear-gradient(90deg, #E7F0ED 25%, #F4F8F7 50%, #E7F0ED 75%);
+  background-size: 200% 100%;
+  animation: vsc-shimmer 1.4s infinite;
+}
+@keyframes vsc-fly-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.tray-pulse {
+  animation: vsc-fly-pulse 250ms var(--ease);
+}
+
+
+/* ============================================================
+   UX/UI LOADING STATES, SKELETONS & MICRO-INTERACTIONS (Vatel Charte)
+   - Barre de progression supérieure (#vsc-top-loader)
+   - Boutons avec état de chargement instantané (.is-loading + .vsc-btn-spinner)
+   - Squelettes de chargement en forme de cartes (.vsc-skeleton-wrap)
+   - Radar d'attente Mobile Money (.vsc-pulse-radar + .vsc-pay-stepper)
+   - Respect strict de prefers-reduced-motion
+   ============================================================ */
+
+@keyframes vsc-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes vsc-top-bar {
+  0% { width: 0%; opacity: 1; }
+  45% { width: 68%; opacity: 1; }
+  85% { width: 90%; opacity: 1; }
+  100% { width: 96%; opacity: 1; }
+}
+
+@keyframes vsc-pulse-ring {
+  0% { transform: scale(0.88); opacity: 0.85; }
+  70% { transform: scale(1.45); opacity: 0; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+@keyframes vsc-card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 1. Barre de progression supérieure */
+.vsc-top-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 0%;
+  z-index: 9999;
+  background: linear-gradient(90deg, #134668 0%, #1B6B9E 45%, #87C1E9 100%);
+  box-shadow: 0 1px 10px rgba(135, 193, 233, 0.75);
+  opacity: 0;
+  pointer-events: none;
+  transition: width 220ms var(--ease), opacity 200ms var(--ease);
+}
+.vsc-top-loader.is-active {
+  opacity: 1;
+  animation: vsc-top-bar 1.6s var(--ease) forwards;
+}
+
+/* 2. Bouton en état de chargement instantané (< 50 ms) */
+.btn.is-loading,
+.vs-btn-order.is-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.92 !important;
+  cursor: wait !important;
+}
+.vsc-btn-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.32);
+  border-top-color: #FFFFFF;
+  display: inline-block;
+  animation: vsc-spin 0.65s linear infinite;
+  flex: 0 0 18px;
+}
+.btn-soft .vsc-btn-spinner,
+.btn-accent .vsc-btn-spinner {
+  border-color: rgba(29, 29, 27, 0.22);
+  border-top-color: #1D1D1B;
+}
+
+/* 3. Squelettes de chargement en forme de cartes (HTMX & transitions) */
+.vsc-skeleton-box {
+  position: relative;
+}
+.vsc-htmx-skeleton {
+  display: none;
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+}
+.htmx-request .vsc-htmx-skeleton,
+.vsc-htmx-skeleton.htmx-request,
+.vsc-skeleton-box.is-loading .vsc-htmx-skeleton {
+  display: block;
+}
+.htmx-request .vsc-htmx-content,
+.vsc-skeleton-box.is-loading .vsc-htmx-content {
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 150ms var(--ease);
+}
+.vsc-skel-line {
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #DCECF8 25%, #F2F8FD 50%, #DCECF8 75%);
+  background-size: 200% 100%;
+  animation: vsc-shimmer 1.25s infinite;
+  margin-bottom: .55rem;
+}
+.vsc-skel-line.w-40 { width: 40%; }
+.vsc-skel-line.w-65 { width: 65%; }
+.vsc-skel-line.w-85 { width: 85%; }
+.vsc-skel-line.h-lg { height: 24px; margin-bottom: 0; }
+
+/* 4. Radar d'attente Mobile Money (« Validez sur votre téléphone ») */
+.vsc-pulse-radar {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: var(--vatel-blue);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.85rem;
+  box-shadow: 0 10px 25px rgba(27, 107, 158, 0.28);
+}
+.vsc-pulse-radar::before,
+.vsc-pulse-radar::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2.5px solid #87C1E9;
+  animation: vsc-pulse-ring 2s cubic-bezier(0.2, 0.7, 0.25, 1) infinite;
+}
+.vsc-pulse-radar::after {
+  animation-delay: 0.9s;
+}
+
+.vsc-pay-stepper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .5rem;
+  margin: 1rem 0 1.25rem;
+}
+.vsc-pay-step {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: .6rem .5rem;
+  text-align: center;
+  font-size: .76rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.vsc-pay-step.is-done {
+  background: var(--success-soft);
+  border-color: rgba(21, 115, 71, 0.3);
+  color: var(--success);
+}
+.vsc-pay-step.is-current {
+  background: var(--vatel-blue-soft);
+  border-color: var(--vatel-blue);
+  color: var(--vatel-blue-dark);
+  font-weight: 700;
+}
+
+/* 5. Entrée douce des cartes & badge Crédits Vatel */
+.vs-product, .fd-dish-card, .sego-kpi, .chart-card {
+  animation: vsc-card-in 220ms var(--ease) both;
+}
+.badge-vatel-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .28rem .68rem;
+  border-radius: var(--radius-pill);
+  background: rgba(135, 193, 233, 0.22);
+  color: #FFFFFF;
+  border: 1px solid rgba(135, 193, 233, 0.55);
+  font-size: .74rem;
+  font-weight: 700;
+}
+
+/* Utilitaires CSP-strict (zéro style inline) */
+.chip-warn-soft { background: #FEF0C7; color: #7A4104; }
+.chip-warn-amber { background: #FEF0C7; color: #8F4F06; }
+.chip-ok-soft { background: #E0F3EB; color: #157347; }
+.chip-xs { font-size: .7rem; padding: .18rem .5rem; }
+.chip-code-xs { font-size: .7rem; padding: .15rem .45rem; }
+.vsc-border-2 { border-width: 2px !important; }
+.vsc-grid-full { grid-column: 1 / -1; }
+.vsc-ratio-4x3 { aspect-ratio: 4 / 3; }
+.vsc-title-sm { font-size: 1.1rem; }
+.vsc-switch-lg { width: 2.6rem; height: 1.35rem; }
+.vsc-kpi-ring-badge {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 1.1rem;
+  font-weight: 800;
+}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Erreur serveur — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="vsc-narrow py-4">
+    <div class="surface p-4 p-md-5 text-center">
+        <img src="{% static 'img/logo-vatel.svg' %}" alt="Logo Vatel" class="brand-logo mx-auto mb-3">
+        <div class="eyebrow text-warning mb-2">Interruption temporaire</div>
+        <h1 class="display-md mb-2">Une erreur est survenue</h1>
+        <p class="muted mb-4">
+            Le service a rencontré une difficulté temporaire. Veuillez réessayer dans quelques instants.
+        </p>
+        <a href="/" class="btn btn-brand">
+            <i class="bi bi-house" aria-hidden="true"></i>Retour à l'accueil
+        </a>
+    </div>
+</div>
+{% endblock %}

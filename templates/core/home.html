@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load static canteen_tags %}
+
+{% block title %}Vatel Smart Canteen — Accueil{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Colonne principale -->
+    <div class="col-12 col-xl-8">
+        <!-- Salutation personnelle selon l'heure + Compte à rebours doux vers 18h00 -->
+        <section class="vsc-hero mb-4">
+            <span class="vsc-hero-badge mb-2">
+                <i class="bi bi-award-fill" aria-hidden="true"></i>
+                <span>Vatel Smart Canteen · L'art de recevoir</span>
+            </span>
+            <h1 class="display-xl mb-1" {% if user.is_authenticated %}data-greeting-name="{{ user.first_name }}"{% endif %}>
+                {% if user.is_authenticated %}Bonjour {{ user.first_name }}{% else %}Vatel Smart Canteen{% endif %}
+            </h1>
+            <p class="lead opacity-90 mb-3" id="cutoff-countdown">
+                Réservez pour demain avant 18h00
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'menus:week_menu' %}" class="btn btn-piment">
+                    <i class="bi bi-ui-checks" aria-hidden="true"></i>Composer mon plateau
+                </a>
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-accent">Se connecter</a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-soft">Créer un compte élève</a>
+                {% elif user.is_diner %}
+                    <a href="{% url 'reservations:list' %}" class="btn btn-soft">
+                        <i class="bi bi-calendar2-check" aria-hidden="true"></i>Mes réservations
+                    </a>
+                {% elif user.role == "PARENT" %}
+                    <a href="{% url 'parents:home' %}" class="btn btn-accent">
+                        <i class="bi bi-people-fill" aria-hidden="true"></i>Espace Parent
+                    </a>
+                {% elif user.role == "EQUIPE" %}
+                    <a href="{% url 'canteen:kitchen' %}" class="btn btn-accent">Consolidation cuisine</a>
+                    <a href="{% url 'canteen:counter' %}" class="btn btn-soft">Comptoir QR</a>
+                {% elif user.role == "ADMIN" %}
+                    <a href="{% url 'dashboard:home' %}" class="btn btn-accent">Tableau de bord</a>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Statut de la semaine en 5 pastilles (lun. -> ven.) : Réservé ✓ / Je ne mange pas / À choisir -->
+        <section class="mb-4" aria-labelledby="week-status-title">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h6 fw-bold mb-0" id="week-status-title">Votre semaine en un coup d'œil</h2>
+                <a href="{% url 'menus:week_menu' %}" class="link-more">
+                    <span>Menu complet</span><i class="bi bi-chevron-right ms-1" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="week-pills">
+                {% for svc in services|slice:":5" %}
+                    <a href="{% url 'menus:week_menu' %}?date={{ svc.date|date:'Y-m-d' }}" class="week-pill">
+                        <span class="small fw-bold text-capitalize">{{ svc.date|date:"D j" }}</span>
+                        <span class="chip chip-primary chip-xs">À choisir</span>
+                    </a>
+                {% empty %}
+                    <div class="surface-flat p-3 small muted vsc-grid-full">
+                        Le menu de la semaine arrive bientôt.
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Carte du jour en grand (photo pleine largeur 4:3, plats du prochain déjeuner) -->
+        <section aria-labelledby="services-title">
+            <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+                <div>
+                    <div class="eyebrow">À la carte</div>
+                    <h2 class="display-md mb-0" id="services-title">Prochains déjeuners publiés</h2>
+                </div>
+            </div>
+
+            {% if services %}
+                {% with featured=services.0 %}
+                <article class="vs-product mb-4">
+                    <div class="product-header">
+                        <div class="product-img">
+                            <img src="{% static 'img/dishes/attieke.jpg' %}" alt="Déjeuner du {{ featured.date|date:'l j F' }}">
+                        </div>
+                        <span class="vs-cat-tag">À la une · {{ featured.date|date:"l j F" }}</span>
+                        <span class="vs-discount">Repas complet : {{ featured.meal_price|fcfa }}</span>
+                    </div>
+                    <div class="product-body">
+                        <h3 class="vs-product-title text-capitalize">Le déjeuner de {{ featured.date|date:"l j F Y" }}</h3>
+                        <p class="small muted mb-3">
+                            {% for opt in featured.options.all|slice:":4" %}
+                                <strong>{{ opt.dish.get_category_display }} :</strong> {{ opt.dish.name }}{% if not forloop.last %} · {% endif %}
+                            {% empty %}
+                                Menu en cours de dressage par le chef.
+                            {% endfor %}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="small muted">
+                                <i class="bi bi-clock-history text-primary me-1" aria-hidden="true"></i>Clôture la veille à 18h00
+                            </span>
+                            <a href="{% url 'menus:week_menu' %}?date={{ featured.date|date:'Y-m-d' }}" class="btn btn-soft">
+                                Composer mon plateau
+                            </a>
+                        </div>
+                    </div>
+                </article>
+                {% endwith %}
+
+                <div class="row g-3">
+                    {% for svc in services|slice:"1:5" %}
+                        <div class="col-12 col-md-6">
+                            <article class="fd-dish-card">
+                                <span class="fd-ribbon">Déjeuner · {{ svc.date|date:"D j M" }}</span>
+                                <div class="d-flex justify-content-end mb-2">
+                                    <span class="chip"><i class="bi bi-clock" aria-hidden="true"></i>Veille 18h00</span>
+                                </div>
+                                <h3 class="h5 fw-bold text-capitalize mt-1 mb-2">{{ svc.date|date:"l j F" }}</h3>
+                                <ul class="small muted ps-3 mb-3 flex-grow-1">
+                                    {% for opt in svc.options.all|slice:":3" %}
+                                        <li>{{ opt.dish.name }}</li>
+                                    {% empty %}
+                                        <li>Le menu arrive bientôt</li>
+                                    {% endfor %}
+                                </ul>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+                                    <span class="price">{{ svc.meal_price|fcfa }}</span>
+                                    <a href="{% url 'menus:week_menu' %}?date={{ svc.date|date:'Y-m-d' }}" class="btn-round-plus" aria-label="Choisir le {{ svc.date|date:'l j F' }}">
+                                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </article>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="surface empty-state">
+                    <i class="bi bi-calendar2-heart" aria-hidden="true"></i>
+                    <strong>Le menu de la semaine arrive bientôt.</strong>
+                    <p class="small mb-0">Notre brigade prépare les entrées, plats et desserts des prochains jours.</p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Panneau latéral droit : Carte « Solde Vatel Cantine » -->
+    <div class="col-12 col-xl-4">
+        <aside class="fd-right-panel" aria-label="Solde Vatel Cantine et plateau">
+            <h2 class="h6 fw-bold mb-2">Solde Vatel Cantine</h2>
+            <div class="fd-balance-box">
+                <div class="fd-balance-label">Débit programmé la veille à 18h00</div>
+                <div class="fd-balance-amount">
+                    {% if user.is_authenticated and user.is_diner %}
+                        Mon Solde Vatel
+                    {% else %}
+                        1 500 FCFA <small class="fs-6 fw-normal opacity-75">/ repas complet</small>
+                    {% endif %}
+                </div>
+                <div class="fd-balance-actions">
+                    {% if user.is_authenticated and user.is_diner %}
+                        <a href="{% url 'wallet:home' %}" class="fd-pill-white">
+                            <i class="bi bi-wallet2" aria-hidden="true"></i>Recharger
+                        </a>
+                        <a href="{% url 'wallet:home' %}" class="fd-pill-white">
+                            <i class="bi bi-clock-history" aria-hidden="true"></i>Débit à la veille
+                        </a>
+                    {% elif user.is_authenticated and user.role == "PARENT" %}
+                        <a href="{% url 'parents:home' %}" class="fd-pill-white">
+                            <i class="bi bi-people-fill" aria-hidden="true"></i>Mes enfants
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="fd-pill-white">
+                            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>Se connecter
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="fd-pill-white">
+                            <i class="bi bi-person-plus" aria-hidden="true"></i>S'inscrire
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="fd-address-box">
+                <div class="eyebrow mb-1">Mode de remise</div>
+                <div class="fd-address-head">
+                    <span class="fd-address-title">
+                        <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>Retrait au comptoir ou Livraison
+                    </span>
+                    <a href="{% url 'menus:week_menu' %}" class="fd-btn-change">Changer</a>
+                </div>
+                <p class="small muted mb-2">
+                    Choisissez le retrait au comptoir ou la livraison dans votre salle ou bureau lors de la composition de votre plateau.
+                </p>
+                <div class="d-flex flex-wrap gap-1">
+                    <span class="op-badge op-topup"><i class="bi bi-wallet2" aria-hidden="true"></i>Recharge</span>
+                    <span class="op-badge op-annual"><i class="bi bi-award-fill" aria-hidden="true"></i>Année soldée</span>
+                    <span class="op-badge op-pickup"><i class="bi bi-phone-vibrate" aria-hidden="true"></i>Au retrait</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="eyebrow mb-2">Les 3 étapes de votre plateau</div>
+                <div class="fd-order-item">
+                    <img class="fd-order-thumb" src="{% static 'img/dishes/salade.jpg' %}" alt="Entrée">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">1. Entrée</div>
+                        <div class="small muted">Au choix ou « Sans entrée »</div>
+                    </div>
+                </div>
+                <div class="fd-order-item">
+                    <img class="fd-order-thumb" src="{% static 'img/dishes/attieke.jpg' %}" alt="Plat principal">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">2. Plat principal</div>
+                        <div class="small muted">Obligatoire · option + 1 portion</div>
+                    </div>
+                </div>
+                <div class="fd-order-item">
+                    <img class="fd-order-thumb" src="{% static 'img/dishes/dessert.jpg' %}" alt="Dessert">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold small">3. Dessert</div>
+                        <div class="small muted">Au choix ou « Sans dessert »</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div class="alert-soft alert-info mt-4" role="note">
+    <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+    <div class="small">
+        Allergènes déclarés par la cantine. L'application ne garantit pas l'absence de contamination croisée. En cas d'allergie sévère, signalez-le au personnel.
+    </div>
+</div>
+{% endblock %}
