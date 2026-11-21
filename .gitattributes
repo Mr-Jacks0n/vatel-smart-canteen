@@ -1,0 +1,3 @@
+# Exclure les bibliothèques tierces locales (Bootstrap, HTMX, Chart.js) des statistiques Linguist de GitHub
+# afin d'afficher fidèlement les langages réels du projet (Python, HTML, CSS, JavaScript).
+static/vendor/** linguist-vendored
