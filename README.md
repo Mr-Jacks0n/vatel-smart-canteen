@@ -4,6 +4,9 @@
 
 Application web responsive (mobile-first pour élèves, personnel et parents ; bureau pour équipe cantine et administration) développée dans le cadre du Hackathon Cantine Vatel.
 
+- **Démo en ligne (Render)** : https://vatel-smart-canteen.onrender.com/
+- **Dépôt GitHub** : https://github.com/Mr-Jacks0n/vatel-smart-canteen
+
 ---
 
 ## 1. Problèmes traités
