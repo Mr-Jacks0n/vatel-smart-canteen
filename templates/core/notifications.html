@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="mb-3">
+            <div class="eyebrow">Centre d'alertes</div>
+            <h1 class="display-lg mb-1">Notifications</h1>
+            <p class="small muted mb-0">Suivi des soldes, confirmations de paiement et rappels de réservation.</p>
+        </div>
+
+        <div class="surface overflow-hidden">
+            {% for notif in notifications %}
+                {% include "core/partials/notification_item.html" %}
+            {% empty %}
+                <div class="empty-state">
+                    <i class="bi bi-bell-slash" aria-hidden="true"></i>
+                    <strong>Aucune notification</strong>
+                    <p class="small mb-3">Vous êtes à jour. Les alertes de solde et confirmations apparaîtront ici.</p>
+                    <a href="{% url 'menus:week_menu' %}" class="btn btn-soft">Consulter le menu</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

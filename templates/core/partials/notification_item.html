@@ -1,0 +1,47 @@
+<div id="notif-{{ notif.pk }}" class="vsc-notif-item {% if not notif.is_read %}is-unread{% endif %}">
+    <div class="min-w-0 flex-grow-1">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            {% if notif.kind == 'LOW_BALANCE' or notif.kind == 'INSUFFICIENT_BALANCE' or notif.kind == 'PAYMENT_FAILED' %}
+                <span class="chip chip-allergen">
+                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>{{ notif.get_kind_display }}
+                </span>
+            {% elif notif.kind == 'PAYMENT_CONFIRMED' %}
+                <span class="chip chip-ok">
+                    <i class="bi bi-check-circle-fill" aria-hidden="true"></i>{{ notif.get_kind_display }}
+                </span>
+            {% elif notif.kind == 'RESERVATION_CONFIRMED' %}
+                <span class="chip chip-primary">
+                    <i class="bi bi-calendar2-check" aria-hidden="true"></i>{{ notif.get_kind_display }}
+                </span>
+            {% else %}
+                <span class="chip">
+                    <i class="bi bi-info-circle" aria-hidden="true"></i>{{ notif.get_kind_display }}
+                </span>
+            {% endif %}
+            <span class="small muted tabular">{{ notif.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <p class="mb-1 {% if not notif.is_read %}fw-semibold{% endif %}">{{ notif.message }}</p>
+        {% if notif.link %}
+            <a href="{{ notif.link }}" class="link-more small">
+                <span>Voir le détail</span>
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+        {% endif %}
+    </div>
+    <div class="flex-shrink-0">
+        {% if not notif.is_read %}
+            <form
+                method="post"
+                action="{% url 'core:notification_mark_read' notif.pk %}"
+                hx-post="{% url 'core:notification_mark_read' notif.pk %}"
+                hx-target="#notif-{{ notif.pk }}"
+                hx-swap="outerHTML"
+            >
+                {% csrf_token %}
+                <button type="submit" class="btn btn-soft btn-sm text-nowrap">Marquer lue</button>
+            </form>
+        {% else %}
+            <span class="chip chip-ok"><i class="bi bi-check2" aria-hidden="true"></i>Lue</span>
+        {% endif %}
+    </div>
+</div>

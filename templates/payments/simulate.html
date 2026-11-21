@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}Validation Mobile Money — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="sim-gateway p-3 p-md-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                {% if payment.kind == "TOPUP" %}
+                    <span class="op-badge op-topup">
+                        <i class="bi bi-wallet2" aria-hidden="true"></i>{{ payment.get_kind_display }}
+                    </span>
+                {% elif payment.kind == "ANNUAL_PREPAYMENT" %}
+                    <span class="op-badge op-annual">
+                        <i class="bi bi-award-fill" aria-hidden="true"></i>{{ payment.get_kind_display }}
+                    </span>
+                {% else %}
+                    <span class="op-badge op-pickup">
+                        <i class="bi bi-phone-vibrate" aria-hidden="true"></i>{{ payment.get_kind_display }}
+                    </span>
+                {% endif %}
+
+                {% if payment.status == "CONFIRMED" %}
+                    <span class="badge-status status-ok">{{ payment.get_status_display }}</span>
+                {% elif payment.status == "FAILED" %}
+                    <span class="badge-status status-danger">{{ payment.get_status_display }}</span>
+                {% else %}
+                    <span class="badge-status status-warn">{{ payment.get_status_display }}</span>
+                {% endif %}
+            </div>
+
+            {% if payment.status == "PENDING" %}
+                <!-- Attente de validation Mobile Money (« Validez sur votre téléphone ») -->
+                <div class="text-center my-2">
+                    <div class="vsc-pulse-radar" aria-hidden="true">
+                        <i class="bi bi-phone-vibrate"></i>
+                    </div>
+                    <div class="badge-soft mb-2">
+                        <i class="bi bi-shield-lock" aria-hidden="true"></i>Paiement simulé — démonstration
+                    </div>
+                    <h1 class="display-md mb-1">{{ instructions.title }}</h1>
+                    <p class="small muted mb-2">{{ instructions.subtitle }}</p>
+                </div>
+
+                <!-- Frise d'avancement en 3 étapes UX -->
+                <div class="vsc-pay-stepper" aria-label="Étapes de validation du paiement">
+                    <div class="vsc-pay-step is-done">
+                        <i class="bi bi-check-circle-fill d-block mb-1" aria-hidden="true"></i>
+                        1. Demande initiée
+                    </div>
+                    <div class="vsc-pay-step is-current">
+                        <i class="bi bi-phone-vibrate d-block mb-1" aria-hidden="true"></i>
+                        2. Validation téléphone
+                    </div>
+                    <div class="vsc-pay-step">
+                        <i class="bi bi-wallet2 d-block mb-1" aria-hidden="true"></i>
+                        3. Crédit instantané
+                    </div>
+                </div>
+            {% else %}
+                <div class="badge-soft mb-2">
+                    <i class="bi bi-shield-lock" aria-hidden="true"></i>Paiement simulé — démonstration
+                </div>
+                <h1 class="display-md mb-1">{{ instructions.title }}</h1>
+                <p class="small muted mb-3">{{ instructions.subtitle }}</p>
+            {% endif %}
+
+            <div class="surface p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center py-1 gap-2">
+                    <span class="small muted">Opération</span>
+                    <strong class="text-end">{{ payment.get_kind_display }}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-1 gap-2">
+                    <span class="small muted">Bénéficiaire</span>
+                    <strong class="text-end">
+                        {{ payment.beneficiary.full_name }}
+                        {% if payment.beneficiary.school_id %}
+                            <span class="chip font-monospace ms-1">{{ payment.beneficiary.school_id }}</span>
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-1 gap-2">
+                    <span class="small muted">Moyen</span>
+                    <strong class="text-end">{{ payment.get_method_display }}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-1 gap-2">
+                    <span class="small muted">Référence</span>
+                    <span class="tabular fw-semibold text-end">{{ payment.reference }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top gap-2">
+                    <span class="fw-semibold">Montant</span>
+                    <span class="price fs-5">{{ payment.amount|fcfa }}</span>
+                </div>
+            </div>
+
+            <p class="small mb-3">{{ instructions.details }}</p>
+
+            {% if instructions.reference_hint %}
+                <div class="alert-soft alert-info mb-3" role="note">
+                    <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+                    <div>{{ instructions.reference_hint }}</div>
+                </div>
+            {% endif %}
+
+            {% if payment.status == "PENDING" %}
+                {% if instructions.can_self_simulate %}
+                    <div class="d-grid gap-2">
+                        <form method="post" action="{% url 'payments:simulate_confirm' payment.reference %}">
+                            {% csrf_token %}
+                            <button
+                                type="submit"
+                                class="btn btn-piment btn-lg w-100"
+                                data-loading-text="Confirmation opérateur en cours…"
+                            >
+                                <i class="bi bi-check2-circle" aria-hidden="true"></i>Simuler la confirmation de l'opérateur
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'payments:simulate_fail' payment.reference %}">
+                            {% csrf_token %}
+                            <button
+                                type="submit"
+                                class="btn btn-soft w-100 text-danger"
+                                data-loading-text="Signalement de l'échec…"
+                            >
+                                <i class="bi bi-x-circle" aria-hidden="true"></i>Simuler un échec
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="alert-soft alert-warning mb-3" role="status">
+                        <i class="bi bi-bank" aria-hidden="true"></i>
+                        <div>
+                            Ce virement est en attente de confirmation par l'administration depuis l'écran « Forfaits et virements ».
+                        </div>
+                    </div>
+                    <a href="{% if user.role == 'PARENT' %}{% url 'parents:home' %}{% else %}{% url 'core:home' %}{% endif %}" class="btn btn-brand w-100">
+                        Retour
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% if user.role == 'PARENT' %}{% url 'parents:home' %}{% else %}{% url 'core:home' %}{% endif %}" class="btn btn-brand w-100">
+                    Retour à l'accueil
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

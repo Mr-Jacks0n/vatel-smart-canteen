@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% load canteen_tags %}
+
+{% block title %}{% if active_pass %}Année soldée{% else %}Solde Vatel Cantine{% endif %} — Vatel Smart Canteen{% endblock %}
+
+{% block content %}
+{% if active_pass %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 col-xl-7">
+            <section class="pass-card mb-4" aria-label="Forfait annuel actif">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <span class="eyebrow text-white-50">
+                        {{ user.full_name }}{% if user.class_name %} · {{ user.class_name }}{% elif user.department %} · {{ user.department.name }}{% endif %}
+                    </span>
+                    <span class="badge-annual-pass">
+                        <i class="bi bi-award-fill" aria-hidden="true"></i>Année soldée
+                    </span>
+                </div>
+                <h1 class="pass-title">Votre forfait annuel est actif</h1>
+                <p class="mb-3 text-white-50">
+                    Année scolaire <strong class="text-white">{{ active_pass.school_year }}</strong> ·
+                    Valide du <strong class="text-white">{{ active_pass.valid_from|date:"d/m/Y" }}</strong>
+                    au <strong class="text-white">{{ active_pass.valid_until|date:"d/m/Y" }}</strong>.
+                </p>
+                {% if active_pass.activated_by %}
+                    <p class="small text-white-50 mb-3">
+                        Activé par {{ active_pass.activated_by.full_name }}.
+                    </p>
+                {% endif %}
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'menus:week_menu' %}" class="btn btn-accent">
+                        <i class="bi bi-journal-text" aria-hidden="true"></i>Consulter le menu &amp; réserver
+                    </a>
+                    <a href="{% url 'reservations:list' %}" class="btn btn-soft">
+                        <i class="bi bi-calendar2-check" aria-hidden="true"></i>Mes réservations
+                    </a>
+                </div>
+            </section>
+
+            <section class="surface p-3 p-md-4" aria-labelledby="pass-rules-title">
+                <div class="eyebrow mb-1">Couverture du forfait</div>
+                <h2 class="h5 mb-3" id="pass-rules-title">Fonctionnement de votre forfait</h2>
+                <div class="list-row">
+                    <span class="list-icon op-annual-icon"><i class="bi bi-award-fill" aria-hidden="true"></i></span>
+                    <div class="list-main">
+                        <p class="list-title">Repas complet inclus chaque jour</p>
+                        <p class="list-sub">Couvre un repas complet (entrée + plat principal + dessert) par jour de service pendant la période de validité.</p>
+                    </div>
+                </div>
+                <div class="list-row">
+                    <span class="list-icon ok"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
+                    <div class="list-main">
+                        <p class="list-title">Réservation obligatoire avant 18h00 la veille</p>
+                        <p class="list-sub">Le forfait ne réserve pas automatiquement : pensez à composer ou décliner votre repas avant l'heure limite de la veille.</p>
+                    </div>
+                </div>
+                <div class="list-row">
+                    <span class="list-icon op-pickup-icon"><i class="bi bi-phone-vibrate" aria-hidden="true"></i></span>
+                    <div class="list-main">
+                        <p class="list-title">Suppléments réglés dans l'application</p>
+                        <p class="list-sub">Les portions supplémentaires et frais de livraison éventuels sont réglés via l'application (Mobile Money ou carte simulée) avant la remise.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+{% else %}
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+        <div>
+            <div class="eyebrow">Portefeuille personnel</div>
+            <h1 class="display-lg mb-0">Solde Vatel Cantine</h1>
+        </div>
+        <span class="op-badge op-topup">
+            <i class="bi bi-wallet2" aria-hidden="true"></i>100 % dématérialisé
+        </span>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-5">
+            {% if is_low_balance %}
+                <div class="alert-soft alert-warning mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                    <div>
+                        <strong>Solde faible :</strong> votre solde est inférieur à {{ low_threshold|fcfa }}. Pensez à recharger votre portefeuille.
+                    </div>
+                </div>
+            {% endif %}
+
+            <section class="balance-card mb-4" aria-label="Solde actuel et prévisionnel">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                    <span class="label">Solde Vatel Cantine</span>
+                    <span class="badge-scheduled">
+                        <i class="bi bi-clock-history" aria-hidden="true"></i>Débit à la veille
+                    </span>
+                </div>
+                <div class="amount tabular">{{ wallet.balance|fcfa }}</div>
+
+                <div class="forecast-bar">
+                    <div class="min-w-0">
+                        <div class="f-label">Actuel</div>
+                        <div class="f-val">{{ wallet.balance|fcfa }}</div>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="f-label">Programmé</div>
+                        <div class="f-val {% if scheduled_total > 0 %}is-warn{% endif %}">
+                            {% if scheduled_total > 0 %}−{% endif %}{{ scheduled_total|fcfa }}
+                        </div>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="f-label">Prévisionnel</div>
+                        <div class="f-val {% if projected_balance < 0 %}is-warn{% endif %}">
+                            {{ projected_balance|fcfa }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                    <span class="meta">Plafond portefeuille : 100 000 FCFA</span>
+                    <a href="#recharge" class="btn btn-accent btn-sm">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>Recharger
+                    </a>
+                </div>
+            </section>
+
+            <section class="surface p-3 p-md-4 mb-4" id="recharge" aria-labelledby="recharge-title">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <span class="op-badge op-topup">
+                        <i class="bi bi-wallet2" aria-hidden="true"></i>Recharge ponctuelle
+                    </span>
+                    <span class="chip">Simulation</span>
+                </div>
+                <h2 class="display-md mb-1" id="recharge-title">Créditer mon compte</h2>
+                <p class="small muted mb-3">
+                    Paiement 100 % dématérialisé (Mobile Money ou carte bancaire simulée).
+                </p>
+
+                <form method="post" action="{% url 'wallet:topup_init' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <div class="eyebrow mb-2">Montant de la recharge</div>
+                        <div class="row g-2">
+                            {% for amt in topup_amounts %}
+                                <div class="{% if forloop.last and not forloop.counter|divisibleby:2 %}col-12 col-sm-6{% else %}col-6{% endif %}{% if forloop.counter <= 3 %} col-sm-4{% endif %}">
+                                    <label class="amount-chip" for="amt-{{ amt }}">
+                                        <input type="radio" name="amount" id="amt-{{ amt }}" value="{{ amt }}" {% if amt == 5000 %}checked{% elif forloop.first and 5000 not in topup_amounts %}checked{% endif %}>
+                                        <strong>{{ amt|fcfa }}</strong>
+                                        <span>{% if amt == 5000 %}défaut{% else %}choisir{% endif %}</span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="eyebrow mb-2">Moyen de paiement</div>
+                        <div class="d-grid gap-2">
+                            {% for code, label in topup_methods %}
+                                <label class="pay-option" for="wallet-method-{{ code }}">
+                                    <input type="radio" name="method" id="wallet-method-{{ code }}" value="{{ code }}" {% if forloop.first %}checked{% endif %}>
+                                    <span class="pay-logo {% if code == 'WAVE' %}pay-wave{% elif code == 'ORANGE_MONEY' %}pay-orange{% elif code == 'MTN_MOMO' %}pay-mtn{% elif code == 'MOOV_MONEY' %}pay-moov{% else %}pay-bank{% endif %}" aria-hidden="true">
+                                        {% if code == 'WAVE' %}W{% elif code == 'ORANGE_MONEY' %}OM{% elif code == 'MTN_MOMO' %}MTN{% elif code == 'MOOV_MONEY' %}MV{% else %}<i class="bi bi-credit-card"></i>{% endif %}
+                                    </span>
+                                    <span class="flex-grow-1 min-w-0">
+                                        <strong class="d-block">{{ label }}</strong>
+                                        <span class="small muted d-block">
+                                            {% if code == 'BANK_CARD' %}Carte simulée — aucune donnée bancaire stockée{% else %}Validation Mobile Money simulée{% endif %}
+                                        </span>
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="id_phone">Téléphone Mobile Money (fictif)</label>
+                        <input type="text" name="phone_number" id="id_phone" class="form-control tabular" placeholder="07 00 00 00 00">
+                        <div class="form-text">Laissez vide pour carte bancaire (aucune donnée de carte demandée).</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-shield-lock" aria-hidden="true"></i>Continuer vers le paiement simulé
+                    </button>
+                </form>
+            </section>
+
+            <section class="surface p-3 p-md-4" aria-labelledby="debit-settings-title">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <div>
+                        <div class="eyebrow">Clôture 18h00</div>
+                        <h2 class="h6 fw-bold mb-0" id="debit-settings-title">Réglages du débit à la veille</h2>
+                    </div>
+                    <span class="badge-scheduled"><i class="bi bi-gear" aria-hidden="true"></i>Compte</span>
+                </div>
+
+                <form method="post" action="{% url 'wallet:settings' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <div class="eyebrow mb-2">Fréquence de débit</div>
+                        <div class="d-grid gap-2">
+                            {% for code, label in wallet.DebitFrequency.choices %}
+                                <label class="pay-option" for="freq-{{ code }}">
+                                    <input type="radio" name="debit_frequency" id="freq-{{ code }}" value="{{ code }}" {% if wallet.debit_frequency == code %}checked{% endif %}>
+                                    <span class="flex-grow-1 min-w-0">
+                                        <strong class="d-block">{% if code == 'DAILY' %}Journalière{% else %}Hebdomadaire{% endif %}</strong>
+                                        <span class="small muted d-block">{{ label }}</span>
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <label class="vsc-check-pill mb-3" for="id_auto_debit">
+                        <input type="checkbox" name="auto_debit_enabled" id="id_auto_debit" {% if wallet.auto_debit_enabled %}checked{% endif %}>
+                        <span class="vsc-check-box" aria-hidden="true"></span>
+                        <span>Débit automatique activé lors de la clôture (18h00)</span>
+                    </label>
+
+                    <button type="submit" class="btn btn-soft w-100">
+                        Enregistrer les réglages
+                    </button>
+                </form>
+
+                {% if scheduled_total > 0 %}
+                    <form method="post" action="{% url 'reservations:pay_now_scheduled' %}" class="mt-3 pt-3 border-top">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-brand w-100">
+                            <i class="bi bi-check2-circle" aria-hidden="true"></i>Régler maintenant ({{ scheduled_total|fcfa }})
+                        </button>
+                    </form>
+                {% endif %}
+            </section>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            <section class="surface p-3 p-md-4" aria-labelledby="ledger-title">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                        <div class="eyebrow">Journal immuable</div>
+                        <h2 class="h5 mb-0" id="ledger-title">Historique du Solde Vatel Cantine</h2>
+                    </div>
+                    <span class="chip tabular">{{ page_obj.paginator.count }} mouvement{{ page_obj.paginator.count|pluralize }}</span>
+                </div>
+
+                {% if page_obj %}
+                    <div>
+                        {% for tx in page_obj %}
+                            <div class="list-row">
+                                {% if tx.kind == "TOPUP_CREDIT" %}
+                                    <span class="list-icon op-topup-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span>
+                                {% elif tx.kind == "CONSUMPTION" %}
+                                    <span class="list-icon out"><i class="bi bi-ticket-perforated" aria-hidden="true"></i></span>
+                                {% elif tx.kind == "REFUND" %}
+                                    <span class="list-icon ok"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></span>
+                                {% else %}
+                                    <span class="list-icon"><i class="bi bi-sliders" aria-hidden="true"></i></span>
+                                {% endif %}
+                                <div class="list-main">
+                                    <p class="list-title">{{ tx.get_kind_display }}{% if tx.reason %} · {{ tx.reason }}{% endif %}</p>
+                                    <p class="list-sub tabular">{{ tx.created_at|date:"d/m/Y H:i" }} · Solde après : {{ tx.balance_after|fcfa }}</p>
+                                </div>
+                                <span class="list-amount {% if tx.direction == '+' %}in{% endif %}">
+                                    {{ tx.direction }}{{ tx.amount|fcfa }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-journal-text" aria-hidden="true"></i>
+                        <strong>Aucun mouvement enregistré</strong>
+                        <p class="small mb-0">Vos recharges et débits de repas apparaîtront ici.</p>
+                    </div>
+                {% endif %}
+
+                {% if page_obj.has_other_pages %}
+                    <nav class="d-flex justify-content-between align-items-center gap-2 pt-3 mt-2 border-top" aria-label="Pagination du journal">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}" class="page-link btn btn-soft btn-sm">
+                                <i class="bi bi-chevron-left" aria-hidden="true"></i>Précédent
+                            </a>
+                        {% else %}
+                            <span></span>
+                        {% endif %}
+                        <span class="small muted tabular">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="page-link btn btn-soft btn-sm">
+                                Suivant<i class="bi bi-chevron-right" aria-hidden="true"></i>
+                            </a>
+                        {% else %}
+                            <span></span>
+                        {% endif %}
+                    </nav>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
